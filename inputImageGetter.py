@@ -3,7 +3,7 @@ import csv
 from PIL import Image  
 
 def main():
-   imageFile = open("export-2020-01-17T19_04_30.492Z.csv", 'r') #Open the csv file
+   imageFile = open("export-2020-01-21T21_13_08.371Z.csv", 'r') #Open the csv file
    reader = csv.DictReader(imageFile)
 
    for row in reader:
