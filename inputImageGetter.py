@@ -25,8 +25,8 @@ def main():
          os.mkdir("Blacklist Masks")
       if not os.path.isdir("Whitelist Masks"):
          os.mkdir("Whitelist Masks")
-   except OSError:
-       print ("Directory cannot be created")
+   except OSError as err:
+       print("Error: {0}".format(err))
        return;
 
    imgNum = 1
@@ -59,7 +59,7 @@ def main():
 
       #Load the image to draw the extracted mask data on for validation
       validationMaskImage = cv2.imread(dirPath + "/Input Images/" + row['ID'] + ".jpg")
-      
+
       #Find the 128 points along the image that represent the boundary of free space
       for x in range(0, width, 5):
          for y in range(height):
