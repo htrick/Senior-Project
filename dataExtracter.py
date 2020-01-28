@@ -34,7 +34,7 @@ def main():
    for row in reader:
       print("Image: " + str(imgNum), end = '')
       #Download the original image
-      print(" Getting Original, ", end = '')
+      print(" Getting Original, ", end='')
       imgUrl = row['Labeled Data']
       orgImg = urllib.request.urlretrieve(imgUrl)  #Retrieve the original image
       newImg = Image.open(orgImg[0])
@@ -53,7 +53,7 @@ def main():
       newMask.save(dirPath + "/Image Masks/" + row['ID'] + "_mask.jpg")
       
       #Extract the mask data
-      pixels = newMask.load() # this is not a list, nor is it list()'able
+      pixels = newMask.load()
       width, height = newMask.size
       found = False
       maskData = []
