@@ -4,6 +4,7 @@ import cv2
 import os
 from PIL import Image  
 
+'''Extract input and expected output data from the csv file'''
 def main():
    imageFile = open("export-2020-01-21T21_13_08.371Z.csv", 'r') #Open the csv file
    reader = csv.DictReader(imageFile)
@@ -62,9 +63,9 @@ def main():
 
       #Find the 128 points along the image that represent the boundary of free space
       for x in range(0, width, 5):
-         for y in range(height):
+         for y in range(height-1, -1, -1):
             color = pixels[x,y]
-            if color > 128:
+            if color == 0:
                break
          #Draw a circle on the original image to validate the correct mask data is extracted
          validationMaskImage = cv2.circle(validationMaskImage, (x, y), 1, (0, 255, 0), -1)
@@ -80,7 +81,7 @@ def main():
       #Write the mask data to a file in x,y column format
       x = 0;
       for i in range(128):
-         maskDataFile.write(str(x) + ',' + str(maskData[i]) + '\n')
+         maskDataFile.write(str(x/(width-1)) + ',' + str(maskData[i]/(height-1)) + '\n')
          x += 5
 
       #Check if the mask for the current image can be whitelisted
@@ -139,10 +140,7 @@ def checkForBlackEdges(pixels, width, height):
          blackEdge = False
          break
 
-   return blackEdge
-
-
-      
+   return blackEdge      
 
 if __name__ == '__main__':
    main()
