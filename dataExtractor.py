@@ -21,7 +21,7 @@ def main():
          return
       downloadImageData(args[1]);
 
-#Download the image and mask data from the .csv file
+'''Download the image and mask data from the .csv file'''
 def downloadImageData(csvFile):
    try:
       imageFile = open(csvFile, 'r') #Open the csv file
@@ -30,33 +30,38 @@ def downloadImageData(csvFile):
       return
 
    reader = csv.DictReader(imageFile)
-   whiteList = open("Whitelisted_Images.txt", 'w')
-   blackList = open("Blacklisted_Images.txt", 'w')
+   try:
+      whiteList = open("Whitelisted_Images.txt", 'w')
+      blackList = open("Blacklisted_Images.txt", 'w')
+   except OSError as err:
+      print("Error: {0}".format(err))
+      return
+
    dirPath = os.getcwd() #Get the current directory path
 
    #Make the directories to store the image information
    try:
-      if not os.path.isdir("Input_Images"):
-         os.mkdir("Input_Images")
-      if not os.path.isdir("Image_Masks"):
-         os.mkdir("Image_Masks")
-      if not os.path.isdir("Mask_Data"):
-         os.mkdir("Mask_Data")
-      if not os.path.isdir("Mask_Validation"):
-         os.mkdir("Mask_Validation")
-      if not os.path.isdir("Blacklist_Masks"):
-         os.mkdir("Blacklist_Masks")
-      if not os.path.isdir("Whitelist_Masks"):
-         os.mkdir("Whitelist_Masks")
+      if not os.path.isdir(dirPath + '/Input_Images'):
+         os.mkdir(dirPath + '/Input_Images')
+      if not os.path.isdir(dirPath + '/Image_Masks'):
+         os.mkdir(dirPath + '/Image_Masks')
+      if not os.path.isdir(dirPath + '/Mask_Data'):
+         os.mkdir(dirPath + '/Mask_Data')
+      if not os.path.isdir(dirPath + '/Mask_Validation'):
+         os.mkdir(dirPath + '/Mask_Validation')
+      if not os.path.isdir(dirPath + '/Blacklist_Masks'):
+         os.mkdir(dirPath + '/Blacklist_Masks')
+      if not os.path.isdir(dirPath + '/Whitelist_Masks'):
+         os.mkdir(dirPath + '/Whitelist_Masks')
    except OSError as err:
-       print("Error: {0}".format(err))
-       return;
+      print("Error: {0}".format(err))
+      return
 
    imgNum = 1
    for row in reader:
       print("Image: " + str(imgNum), end = '')
       #Download the original image
-      print(" Getting Original, ", end='')
+      print(" Getting Original, ", end = '')
       imgUrl = row['Labeled Data']
       #orgImg = urllib.request.urlretrieve(imgUrl)  #Retrieve the original image
       orgImg = getImageFromURL(imgUrl) #Retrieve the original image
@@ -127,12 +132,12 @@ def downloadImageData(csvFile):
    whiteList.close()
    blackList.close()
 
-#Download the image from the given URL
+'''Download the image from the given URL'''
 def getImageFromURL(url):
    image = None
    while (image == None):
       try:
-         return urllib.request.urlretrieve(url) #Retrieve the original mask
+         return urllib.request.urlretrieve(url) #Retrieve the image from the URL
       except urllib.error.URLError as err:
          print("Error: {0}".format(err))
          print("Trying again")
