@@ -36,18 +36,18 @@ def downloadImageData(csvFile):
 
    #Make the directories to store the image information
    try:
-      if not os.path.isdir(dirPath + "Input_Images"):
-         os.mkdir(dirPath + "Input_Images")
-      if not os.path.isdir(dirPath + "Image_Masks"):
-         os.mkdir(dirPath + "Image_Masks")
-      if not os.path.isdir(dirPath + "Mask_Data"):
-         os.mkdir(dirPath + "Mask_Data")
-      if not os.path.isdir(dirPath + "Mask_Validation"):
-         os.mkdir(dirPath + "Mask_Validation")
-      if not os.path.isdir(dirPath + "Blacklist_Masks"):
-         os.mkdir(dirPath + "Blacklist_Masks")
-      if not os.path.isdir(dirPath + "Whitelist_Masks"):
-         os.mkdir(dirPath + "Whitelist_Masks")
+      if not os.path.isdir(dirPath + "/Input_Images"):
+         os.mkdir(dirPath + "/Input_Images")
+      if not os.path.isdir(dirPath + "/Image_Masks"):
+         os.mkdir(dirPath + "/Image_Masks")
+      if not os.path.isdir(dirPath + "/Mask_Data"):
+         os.mkdir(dirPath + "/Mask_Data")
+      if not os.path.isdir(dirPath + "/Mask_Validation"):
+         os.mkdir(dirPath + "/Mask_Validation")
+      if not os.path.isdir(dirPath + "/Blacklist_Masks"):
+         os.mkdir(dirPath + "/Blacklist_Masks")
+      if not os.path.isdir(dirPath + "/Whitelist_Masks"):
+         os.mkdir(dirPath + "/Whitelist_Masks")
    except OSError as err:
        print("Error: {0}".format(err))
        return;
