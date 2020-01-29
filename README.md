@@ -8,7 +8,7 @@ opencv-python 4.1.2
 ```
 
 ## dataExtractor.py
-Functionality: Download the images and extract mask information from the given .csv file. If the optional -d flag is given, re-download all the images in the file.
+Functionality: Download the images and extract mask information from the given .csv file if the optional -d flag is given. If the flag is ommited, do nothing.
 ```
 Usage: python3 dataExtractor.py <filename.csv> [-d]
 ``` 
