@@ -4,7 +4,7 @@
 ```
 python3
 PIL >= 7.0.0
-opencv-python 4.1.2
+opencv-python >= 4.1.2
 ```
 
 ## dataExtractor.py
