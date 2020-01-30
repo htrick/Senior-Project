@@ -63,6 +63,7 @@ def downloadImageData(csvFile):
       #Download the original image
       print(" Getting Original, ", end = '')
       imgUrl = row['Labeled Data']
+      #orgImg = urllib.request.urlretrieve(imgUrl)  #Retrieve the original image
       orgImg = getImageFromURL(imgUrl) #Retrieve the original image
       newImg = Image.open(orgImg[0])
       newImg = newImg.convert("RGB")   #Convert the image to RGB format
@@ -73,6 +74,7 @@ def downloadImageData(csvFile):
       #Download the mask for the image
       print("Getting Mask")
       maskUrl = row['Masks'].split('\"')[3]
+      #orgMask = urllib.request.urlretrieve(maskUrl) #Retrieve the original mask
       orgMask = getImageFromURL(maskUrl) #Retrieve the original mask
       newMask = Image.open(orgMask[0])
       newMask = newMask.convert('L')   #Convert the mask to grayscale format
