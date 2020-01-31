@@ -156,10 +156,10 @@ def downloadImageData(csvFile, flag):
 
       maskDataFile = open(dirPath + "/Mask_Data/" + row['ID'] + "_mask_data.txt", 'w')
 
-      #Write the mask data to a file in x,y column format
+      #Write the mask data to a file in x,y column format, where y is normalized between 0 and 1
       x = 0;
       for i in range(128):
-         maskDataFile.write(str(x/(width-1)) + ',' + str(maskData[i]/(height-1)) + '\n')
+         maskDataFile.write(str(x) + ',' + str(maskData[i]/(height-1)) + '\n')
          x += 5
 
       #Check if the mask for the current image can be whitelisted
