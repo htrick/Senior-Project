@@ -10,14 +10,14 @@ opencv-python >= 4.1.2
 ##dataExtractor.py
 Functionality: Download the images and extract mask information from the given .csv file. If the optional -d flag is given, re-download all the images in the file.
 ```
-Usage: python3 dataExtractor.py [-c | -a <filename.csv> | -n <filename.csv>]
+Usage: python3 dataExtractor.py -c | -a <filename.csv> | -n <filename.csv>
 ``` 
 
 ##Command Line Arguments
 * filename.csv: The name of the .csv file to download and extract image and mask data from
-* -c: An optional flag argument to remove all the directories and files containing image data, a way to 'clean' all directory
-* -a: An optional flag argument to re-download all of the images from the given .csv file
-* -n: An optional flag argument to skip already downloaded images and their associated data and download any new images and their associated data
+* -c: A flag argument to remove all the directories and files containing image data, a way to 'clean' all directory
+* -a: A flag argument to re-download all of the images from the given .csv file
+* -n: A flag argument to skip already downloaded images and their associated data and download any new images and their associated data
 
 ##Directories
 The images and their mask data gathered from the dataExtractor.py script are stored in the following directories and .txt files. All directories and files are stored relative the path where the dataExtractor.py script was called from.

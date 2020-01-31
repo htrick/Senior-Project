@@ -24,7 +24,7 @@ def main():
          downloadImageData(args[2], '-n');
          return
 
-   print("Usage: python3 dataExtractor.py [-c | -a <filename.csv> | -n <filename.csv>]")
+   print("Usage: python3 dataExtractor.py -c | -a <filename.csv> | -n <filename.csv>")
    return
 
 '''Remove all the directories and files containing data information'''
