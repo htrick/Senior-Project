@@ -21,11 +21,11 @@ Usage: python3 dataExtractor.py -c | -a <filename.csv> | -n <filename.csv>
 
 ## Directories
 The images and their mask data gathered from the dataExtractor.py script are stored in the following directories and .txt files. All directories and files are stored relative the path where the dataExtractor.py script was called from.
-* Input_Images: Stores a copy of the original image to be used for input.
-* Image_Masks: Stores a copy of all the masks associated with each of the input images.
-* Mask_data: Stores .txt files for all of the image masks with 128 points extracted from the respective image's mask stored in x,y column format. Each x,y pair is normalized to between 0 and 1.
-* Mask_Validation: Stores a copy of each input image with the extracted 128 points from the image's mask overlayed as green circles to validate the correct data is extracted from the mask.
-* Whitelist_Masks: Stores all of the image masks for images that have been whitelisted to validate no image will be used whose original mask was made incorrectly.
-* Blacklist_Masks: Stores all the image masks for images that have been blacklisted to validate that ther are no images whose mask was made correctly will not used.
-* Whitelist_Images.txt: Stores the names of all the images that have been whitelisted to be used as input.
-* Blacklist_Images.txt: Stores the names of all the images that have been blacklisted to not be used as input because they might have a labeling error.
+* **Input_Images**: Stores a copy of the original image to be used for input.
+* **Image_Masks**: Stores a copy of all the masks associated with each of the input images.
+* **Mask_data**: Stores .txt files for all of the image masks with 128 points extracted from the respective image's mask stored in x,y column format. Each x,y pair is normalized to between 0 and 1.
+* **Mask_Validation**: Stores a copy of each input image with the extracted 128 points from the image's mask overlayed as green circles to validate the correct data is extracted from the mask.
+* **Whitelist_Masks**: Stores all of the image masks for images that have been whitelisted to validate no image will be used whose original mask was made incorrectly.
+* **Blacklist_Masks**: Stores all the image masks for images that have been blacklisted to validate that ther are no images whose mask was made correctly will not used.
+* **Whitelist_Images.txt**: Stores the names of all the images that have been whitelisted to be used as input.
+* **Blacklist_Images.txt**: Stores the names of all the images that have been blacklisted to not be used as input because they might have a labeling error.

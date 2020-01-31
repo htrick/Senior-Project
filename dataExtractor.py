@@ -58,8 +58,6 @@ def cleanData():
       print("Error: {0}".format(err))
       return
 
-      
-
 '''Download the image and mask data from the .csv file'''
 def downloadImageData(csvFile, flag):
    try:
