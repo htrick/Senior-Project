@@ -1,23 +1,24 @@
 import os
 import cv2
 import sys
-import keras 
-import numpy as np  
+import keras
+import numpy as np
 from imgaug import augmenters as iaa
 from imgaug import parameters as iap
 from keras.utils import Sequence, to_categorical
 from sklearn.preprocessing import LabelEncoder
 
 class DataGenerator(Sequence):
-    def __init__(self, dir_path, batch_size=16, aug_freq=0.5, image_size=112, shuffle=True):
+    def __init__(self, dir_path, batch_size=16, aug_freq=0.5, image_width=640, image_height=360, shuffle=True):
         self.dir_path = dir_path
         self.batch_size = batch_size
-        self.image_size = image_size
+        self.image_width = image_width
+        self.image_height = image_height
         self.aug_freq = aug_freq
-        self.shuffle = shuffle  
+        self.shuffle = shuffle
         self.__get_all_paths()
-        self.__target_encoding()
-        self.__augmentation_operations()
+        #self.__target_encoding()
+        #self.__augmentation_operations()
         self.on_epoch_end()
 
     def on_epoch_end(self):
@@ -25,8 +26,8 @@ class DataGenerator(Sequence):
         if self.shuffle:
             np.random.shuffle(self.indices)
 
-    def get_num_classes(self):
-        return self.num_classes
+    # def get_num_classes(self):
+    #     return self.num_classes
 
     def __get_all_paths(self):
         if not os.path.exists(self.dir_path):
@@ -35,18 +36,26 @@ class DataGenerator(Sequence):
         self.paths_list = []
         self.label_list = []
         for i, _id in enumerate(os.listdir(self.dir_path)):
+            #add the image filename to the list
             _id_path = os.path.join(self.dir_path, _id)
-            for path in os.listdir(_id_path):
-                img_path = os.path.join(_id_path, path)
-                self.paths_list.append(img_path)
-                self.label_list.append(_id)
-        self.num_classes = i + 1
-        print('** num_classes : ', self.num_classes)
+            self.paths_list.append(_id_path)
+            print(_id_path)
+
+            #read the data from the mask file
+            f = open("../Mask_Data/"+_id.replace(".jpg","")+"_mask_data.txt","r")
+            temp_list = []
+            for x in f:
+                x = x.split(",")[1]
+                x = x.strip()
+                temp_list.append(float(x))
+            print(temp_list)
+            self.label_list.append(temp_list)
+
         return None
-    
-    def __target_encoding(self):
-        self.le = LabelEncoder()
-        self.le.fit(self.label_list)
+
+    # def __target_encoding(self):
+    #     self.le = LabelEncoder()
+    #     self.le.fit(self.label_list)
 
     def __len__(self):
         return int(np.floor(len(self.paths_list) / self.batch_size))
@@ -67,16 +76,16 @@ class DataGenerator(Sequence):
         return X, y
 
     def __data_generation(self, paths_batch_list, label_batch_list):
-        X = np.empty((self.batch_size, self.image_size, self.image_size, 3))
-        y = np.empty((self.batch_size))
+        X = np.empty((self.batch_size, self.image_width, self.image_height, 3))
+        y = np.empty((self.batch_size, len(self.label_list[0])))
 
         for i, (path, label) in enumerate(zip(paths_batch_list, label_batch_list)):
             X[i, :, :, :] = self.__image_augmentation(cv2.imread(path))
-            y[i] = self.le.transform([label])[0]
+            y[i] = self.label_list[i]
 
-        y_one_hot = to_categorical(y, self.num_classes)
+        #y_one_hot = to_categorical(y, self.num_classes)
 
-        return X, y_one_hot
+        return X, y
 
     def __image_augmentation(self, img):
         if img is None:
@@ -86,39 +95,39 @@ class DataGenerator(Sequence):
         img_copy = img_copy[:, :, ::-1]
 
         # do aug
-        if self.aug_freq > np.random.uniform(0, 1, 1):
+        if False and self.aug_freq > np.random.uniform(0, 1, 1): #for now, do not run the augmentor
             img_aug = self.aug_ops.augment_image(img_copy)
         else:
             img_aug = img_copy
 
-        img_norm = self.__normalize(img_aug)      
+        img_norm = self.__normalize(img_aug)
 
-        return cv2.resize(img_norm, (self.image_size, self.image_size))
+        return cv2.resize(img_norm, (self.image_height, self.image_width))
 
-    def __augmentation_operations(self):
-        self.aug_ops = iaa.Sequential(
-            [
-                self.__sometimes(iaa.Fliplr(1), 0.5),
-                self.__sometimes(iaa.Affine(scale=iap.Uniform(1.0, 1.2).draw_samples(1)), 0.3),
-                self.__sometimes(iaa.AdditiveGaussianNoise(scale=0.05*255), 0.2),
-                self.__sometimes(iaa.OneOf(
-                    [
-                        iaa.CropAndPad(percent=(iap.Uniform(0.0, 0.20).draw_samples(1)[0], 
-                                                iap.Uniform(0.0, 0.20).draw_samples(1)[0]),
-                                       pad_mode=["constant"], 
-                                       pad_cval=(0, 128)),
-                        iaa.Crop(percent=(iap.Uniform(0.0, 0.15).draw_samples(1)[0], 
-                                          iap.Uniform(0.0, 0.15).draw_samples(1)[0]))
-                    ]
-                )),
-                self.__sometimes(iaa.OneOf([
-                    iaa.LogContrast(gain=iap.Uniform(0.9, 1.2).draw_samples(1)), 
-                    iaa.GammaContrast(gamma=iap.Uniform(1.5, 2.5).draw_samples(1))]))
-            ],
-            random_order=True       
-        )
-        return None
-    
+    # def __augmentation_operations(self):
+    #     self.aug_ops = iaa.Sequential(
+    #         [
+    #             self.__sometimes(iaa.Fliplr(1), 0.5),
+    #             self.__sometimes(iaa.Affine(scale=iap.Uniform(1.0, 1.2).draw_samples(1)), 0.3),
+    #             self.__sometimes(iaa.AdditiveGaussianNoise(scale=0.05*255), 0.2),
+    #             self.__sometimes(iaa.OneOf(
+    #                 [
+    #                     iaa.CropAndPad(percent=(iap.Uniform(0.0, 0.20).draw_samples(1)[0],
+    #                                             iap.Uniform(0.0, 0.20).draw_samples(1)[0]),
+    #                                    pad_mode=["constant"],
+    #                                    pad_cval=(0, 128)),
+    #                     iaa.Crop(percent=(iap.Uniform(0.0, 0.15).draw_samples(1)[0],
+    #                                       iap.Uniform(0.0, 0.15).draw_samples(1)[0]))
+    #                 ]
+    #             )),
+    #             self.__sometimes(iaa.OneOf([
+    #                 iaa.LogContrast(gain=iap.Uniform(0.9, 1.2).draw_samples(1)),
+    #                 iaa.GammaContrast(gamma=iap.Uniform(1.5, 2.5).draw_samples(1))]))
+    #         ],
+    #         random_order=True
+    #     )
+    #     return None
+
     def __normalize(self, img):
         return img / 255
 

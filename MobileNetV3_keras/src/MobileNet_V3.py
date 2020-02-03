@@ -63,10 +63,10 @@ def __se_block(_inputs, ratio=4, pooling_type='avg'):
 
 def __bottleneck_block(_inputs, out_dim, kernel, strides, expansion_dim, is_use_bias=False, shortcut=True, is_use_se=True, activation='RE', num_layers=0, *args):
     with tf.name_scope('bottleneck_block'):
-        # ** to high dim 
+        # ** to high dim
         bottleneck_dim = expansion_dim
 
-        # ** pointwise conv 
+        # ** pointwise conv
         x = __conv2d_block(_inputs, bottleneck_dim, kernel=(1, 1), strides=(1, 1), is_use_bias=is_use_bias, activation=activation)
 
         # ** depthwise conv
@@ -85,12 +85,12 @@ def __bottleneck_block(_inputs, out_dim, kernel, strides, expansion_dim, is_use_
                 x = Add()([x, _inputs])
     return x
 
-def build_mobilenet_v3(input_size=224, num_classes=1000, model_type='large', pooling_type='avg', include_top=True):
+def build_mobilenet_v3(input_width=640, input_height=360, num_classes=1000, model_type='large', pooling_type='avg', include_top=True):
     # ** input layer
-    inputs = Input(shape=(input_size, input_size, 3))
+    inputs = Input(shape=(input_width, input_height, 3))
 
     # ** feature extraction layers
-    net = __conv2d_block(inputs, 16, kernel=(3, 3), strides=(2, 2), is_use_bias=False, padding='same', activation='HS') 
+    net = __conv2d_block(inputs, 16, kernel=(3, 3), strides=(2, 2), is_use_bias=False, padding='same', activation='HS')
 
     if model_type == 'large':
         config_list = large_config_list
@@ -98,10 +98,10 @@ def build_mobilenet_v3(input_size=224, num_classes=1000, model_type='large', poo
         config_list = small_config_list
     else:
         raise NotImplementedError
-        
+
     for config in config_list:
         net = __bottleneck_block(net, *config)
-    
+
     # ** final layers
     net = __conv2d_block(net, 960, kernel=(3, 3), strides=(1, 1), is_use_bias=True, padding='same', activation='HS', name='output_map')
 
@@ -112,12 +112,12 @@ def build_mobilenet_v3(input_size=224, num_classes=1000, model_type='large', poo
     else:
         raise NotImplementedError
 
-    # ** shape=(None, channel) --> shape(1, 1, channel) 
+    # ** shape=(None, channel) --> shape(1, 1, channel)
     pooled_shape = (1, 1, net._keras_shape[-1])
 
     net = Reshape(pooled_shape)(net)
     net = Conv2D(1280, (1, 1), strides=(1, 1), padding='valid', use_bias=True)(net)
-    
+
     if include_top:
         net = Conv2D(num_classes, (1, 1), strides=(1, 1), padding='valid', use_bias=True)(net)
         net = Flatten()(net)
@@ -128,9 +128,9 @@ def build_mobilenet_v3(input_size=224, num_classes=1000, model_type='large', poo
     return model
 
 """ define bottleneck structure """
-# ** 
-# **             
-global large_config_list    
+# **
+# **
+global large_config_list
 global small_config_list
 
 large_config_list = [[16,  (3, 3), (1, 1), 16,  False, False, False, 'RE',  0],
@@ -153,7 +153,7 @@ small_config_list = [[16,  (3, 3), (2, 2), 16,  False, False, True,  'RE', 0],
                      [24,  (3, 3), (2, 2), 72,  False, False, False, 'RE', 1],
                      [24,  (3, 3), (1, 1), 88,  False, True,  False, 'RE', 2],
                      [40,  (5, 5), (1, 1), 96,  False, False, True,  'HS', 3],
-                     [40,  (5, 5), (1, 1), 240, False, True,  True,  'HS', 4], 
+                     [40,  (5, 5), (1, 1), 240, False, True,  True,  'HS', 4],
                      [40,  (5, 5), (1, 1), 240, False, True,  True,  'HS', 5],
                      [48,  (5, 5), (1, 1), 120, False, False, True,  'HS', 6],
                      [48,  (5, 5), (1, 1), 144, False, True,  True,  'HS', 7],
