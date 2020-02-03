@@ -33,7 +33,7 @@ def _main(args):
     input_height = config_client.getint('model', 'input_height')
     model_size = config_client.get('model', 'model_size')
     pooling_type = config_client.get('model', 'pooling_type')
-    num_classes = config_client.getint('model', 'num_classes')
+    num_outputs = config_client.getint('model', 'num_outputs')
 
     # ** training configuration
     epochs = config_client.getint('train', 'epochs')
@@ -53,9 +53,9 @@ def _main(args):
         model = load_model(os.path.join(ROOT_DIR, onfig_client.get('train', 'pretrained_path')))
     except Exception as e:
         logging.info('Failed to load pre-trained model.')
-        model = build_mobilenet_v3(input_width, input_height, num_classes, model_size, pooling_type)
+        model = build_mobilenet_v3(input_width, input_height, num_outputs, model_size, pooling_type)
 
-    model.compile(optimizer=Adam(lr=3e-3), loss='categorical_crossentropy', metrics=['accuracy'])
+    model.compile(optimizer=Adam(lr=3e-3), loss='mean_absolute_error', metrics=['accuracy'])
 
     # ** setup keras callback
     filename = 'ep{epoch:03d}-loss{loss:.3f}.h5'

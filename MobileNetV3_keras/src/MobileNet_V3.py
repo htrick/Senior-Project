@@ -85,7 +85,7 @@ def __bottleneck_block(_inputs, out_dim, kernel, strides, expansion_dim, is_use_
                 x = Add()([x, _inputs])
     return x
 
-def build_mobilenet_v3(input_width=640, input_height=360, num_classes=1000, model_type='large', pooling_type='avg', include_top=True):
+def build_mobilenet_v3(input_width=640, input_height=360, num_outputs=128, model_type='large', pooling_type='avg', include_top=True):
     # ** input layer
     inputs = Input(shape=(input_width, input_height, 3))
 
@@ -103,7 +103,8 @@ def build_mobilenet_v3(input_width=640, input_height=360, num_classes=1000, mode
         net = __bottleneck_block(net, *config)
 
     # ** final layers
-    net = __conv2d_block(net, 960, kernel=(3, 3), strides=(1, 1), is_use_bias=True, padding='same', activation='HS', name='output_map')
+    #net = __conv2d_block(net, 960, kernel=(3, 3), strides=(1, 1), is_use_bias=True, padding='same', activation='HS', name='output_map')
+    net = __conv2d_block(net, 300, kernel=(3, 3), strides=(1, 1), is_use_bias=True, padding='same', activation='HS', name='output_map')
 
     if pooling_type == 'avg':
         net = GlobalAveragePooling2D()(net)
@@ -116,12 +117,14 @@ def build_mobilenet_v3(input_width=640, input_height=360, num_classes=1000, mode
     pooled_shape = (1, 1, net._keras_shape[-1])
 
     net = Reshape(pooled_shape)(net)
-    net = Conv2D(1280, (1, 1), strides=(1, 1), padding='valid', use_bias=True)(net)
+    #net = Conv2D(1280, (1, 1), strides=(1, 1), padding='valid', use_bias=True)(net)
+    net = Conv2D(128, (1, 1), strides=(1, 1), padding='valid', use_bias=True)(net)
 
     if include_top:
-        net = Conv2D(num_classes, (1, 1), strides=(1, 1), padding='valid', use_bias=True)(net)
+        net = Conv2D(num_outputs, (1, 1), strides=(1, 1), padding='valid', use_bias=True)(net)
         net = Flatten()(net)
-        net = Softmax()(net)
+        net = Dense(num_outputs, activation='linear')(net)
+        #net = Softmax()(net)
 
     model = Model(inputs=inputs, outputs=net)
 
@@ -158,13 +161,15 @@ small_config_list = [[16,  (3, 3), (2, 2), 16,  False, False, True,  'RE', 0],
                      [48,  (5, 5), (1, 1), 120, False, False, True,  'HS', 6],
                      [48,  (5, 5), (1, 1), 144, False, True,  True,  'HS', 7],
                      [96,  (5, 5), (2, 2), 288, False, False, True,  'HS', 8],
-                     [96,  (5, 5), (1, 1), 576, False, True,  True,  'HS', 9],
-                     [96,  (5, 5), (1, 1), 576, False, True,  True,  'HS', 10]]
+                     # [96,  (5, 5), (1, 1), 576, False, True,  True,  'HS', 9],
+                     # [96,  (5, 5), (1, 1), 576, False, True,  True,  'HS', 10]]
+                     [96,  (5, 5), (1, 1), 200, False, True,  True,  'HS', 9],
+                     [96,  (5, 5), (1, 1), 200, False, True,  True,  'HS', 10]]
 
 
 """ build MobileNet V3 model """
 if __name__ == '__main__':
-    model = build_mobilenet_v3(input_size=416, num_classes=10, model_type='large', pooling_type='avg', include_top=True)
+    model = build_mobilenet_v3(input_size=416, num_outputs=10, model_type='smal', pooling_type='avg', include_top=True)
 
     print(model.summary())
     print(model.layers)
