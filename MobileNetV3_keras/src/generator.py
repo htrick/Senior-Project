@@ -39,7 +39,7 @@ class DataGenerator(Sequence):
             #add the image filename to the list
             _id_path = os.path.join(self.dir_path, _id)
             self.paths_list.append(_id_path)
-            print(_id_path)
+            #print(_id_path)
 
             #read the data from the mask file
             f = open("../Mask_Data/"+_id.replace(".jpg","")+"_mask_data.txt","r")
@@ -48,7 +48,7 @@ class DataGenerator(Sequence):
                 x = x.split(",")[1]
                 x = x.strip()
                 temp_list.append(float(x))
-            print(temp_list)
+            #print(temp_list)
             self.label_list.append(temp_list)
 
         return None
@@ -78,6 +78,7 @@ class DataGenerator(Sequence):
     def __data_generation(self, paths_batch_list, label_batch_list):
         X = np.empty((self.batch_size, self.image_width, self.image_height, 3))
         y = np.empty((self.batch_size, len(self.label_list[0])))
+        #print (len(self.label_list[0]))
 
         for i, (path, label) in enumerate(zip(paths_batch_list, label_batch_list)):
             X[i, :, :, :] = self.__image_augmentation(cv2.imread(path))
