@@ -87,7 +87,7 @@ def __bottleneck_block(_inputs, out_dim, kernel, strides, expansion_dim, is_use_
 
 def build_mobilenet_v3(input_width=640, input_height=360, num_outputs=128, model_type='large', pooling_type='avg', include_top=True):
     # ** input layer
-    inputs = Input(shape=(input_width, input_height, 3))
+    inputs = Input(shape=(input_height, input_width, 3))
 
     # ** feature extraction layers
     net = __conv2d_block(inputs, 16, kernel=(3, 3), strides=(2, 2), is_use_bias=False, padding='same', activation='HS')
@@ -104,7 +104,7 @@ def build_mobilenet_v3(input_width=640, input_height=360, num_outputs=128, model
 
     # ** final layers
     #net = __conv2d_block(net, 960, kernel=(3, 3), strides=(1, 1), is_use_bias=True, padding='same', activation='HS', name='output_map')
-    net = __conv2d_block(net, 600, kernel=(3, 3), strides=(1, 1), is_use_bias=True, padding='same', activation='HS', name='output_map')
+    net = __conv2d_block(net, 300, kernel=(3, 3), strides=(1, 1), is_use_bias=True, padding='same', activation='HS', name='output_map')
 
     if pooling_type == 'avg':
         net = GlobalAveragePooling2D()(net)
@@ -118,7 +118,7 @@ def build_mobilenet_v3(input_width=640, input_height=360, num_outputs=128, model
 
     net = Reshape(pooled_shape)(net)
     #net = Conv2D(1280, (1, 1), strides=(1, 1), padding='valid', use_bias=True)(net)
-    net = Conv2D(600, (1, 1), strides=(1, 1), padding='valid', use_bias=True)(net)
+    net = Conv2D(300, (1, 1), strides=(1, 1), padding='valid', use_bias=True)(net)
 
     if include_top:
         net = Conv2D(num_outputs, (1, 1), strides=(1, 1), padding='valid', use_bias=True)(net)

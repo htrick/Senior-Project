@@ -76,15 +76,15 @@ class DataGenerator(Sequence):
         return X, y
 
     def __data_generation(self, paths_batch_list, label_batch_list):
-        X = np.empty((self.batch_size, self.image_width, self.image_height, 3))
-        y = np.empty((self.batch_size, len(self.label_list[0])))
+        X = np.empty((self.batch_size, self.image_height, self.image_width, 3))
+        X = X.astype('float32')
+        y = np.empty((self.batch_size, len(label_batch_list[0])))
+        y = y.astype('float32')
         #print (len(self.label_list[0]))
 
         for i, (path, label) in enumerate(zip(paths_batch_list, label_batch_list)):
             X[i, :, :, :] = self.__image_augmentation(cv2.imread(path))
-            y[i] = self.label_list[i]
-
-        #y_one_hot = to_categorical(y, self.num_classes)
+            y[i, :] = label
 
         return X, y
 
@@ -103,7 +103,9 @@ class DataGenerator(Sequence):
 
         img_norm = self.__normalize(img_aug)
 
-        return cv2.resize(img_norm, (self.image_height, self.image_width))
+        #return cv2.resize(img_norm, (self.image_height, self.image_width))
+        #return cv2.resize(img_norm, (self.image_width, self.image_height))
+        return img_norm
 
     # def __augmentation_operations(self):
     #     self.aug_ops = iaa.Sequential(
@@ -130,7 +132,7 @@ class DataGenerator(Sequence):
     #     return None
 
     def __normalize(self, img):
-        return img / 255
+        return img / 255.0
 
     def __sometimes(self, aug, prob=0.5):
         return iaa.Sometimes(prob, aug)
