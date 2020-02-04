@@ -55,13 +55,14 @@ def _main(args):
         logging.info('Failed to load pre-trained model.')
         model = build_mobilenet_v3(input_width, input_height, num_outputs, model_size, pooling_type)
 
-    model.compile(optimizer=Adam(lr=3e-3), loss='mean_absolute_error', metrics=['accuracy'])
+    #model.compile(optimizer=Adam(lr=3e-3), loss='mean_absolute_error', metrics=['accuracy'])
+    model.compile(optimizer=Adam(), loss='mean_absolute_error', metrics=['accuracy'])
 
     # ** setup keras callback
     filename = 'ep{epoch:03d}-loss{loss:.3f}.h5'
     weights_directory = os.path.join(ROOT_DIR, 'weights')
     save_path = os.path.join(weights_directory, filename)
-    checkpoint = ModelCheckpoint(save_path, monitor='loss', save_best_only=True, period=5)
+    checkpoint = ModelCheckpoint(save_path, monitor='loss', save_best_only=True, period=50)
     scheduler = LearningRateScheduler(learning_rate_scheduler)
     # reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=5, verbose=1)
     # early_stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=25, verbose=1)
@@ -73,7 +74,8 @@ def _main(args):
     # ** start training
     model.fit_generator(generator       = train_generator,
                         epochs          = epochs,
-                        callbacks       = [checkpoint, scheduler],
+                        #callbacks       = [checkpoint, scheduler],
+                        callbacks       = [checkpoint],
                         )
 
     model.save(os.path.join(ROOT_DIR, save_path))
