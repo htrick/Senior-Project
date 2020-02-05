@@ -14,6 +14,8 @@ from keras.callbacks import (ModelCheckpoint,
                              ReduceLROnPlateau,
                              EarlyStopping)
 
+from model.mobilenet_v3_small import MobileNetV3_Small
+
 logging.basicConfig(level=logging.INFO)
 
 def _main(args):
@@ -48,6 +50,7 @@ def _main(args):
     train_generator = DataGenerator(dir_path=train_directory, batch_size=batch_size, aug_freq=0, image_width=640, image_height=360)
     valid_generator = DataGenerator(dir_path=valid_directory, batch_size=batch_size, aug_freq=0, image_width=640, image_height=360)
 
+    model_test = MobileNetV3_Small((360,640,3), num_outputs).build()
     # ** initalize model
     try:
         model = load_model(os.path.join(ROOT_DIR, onfig_client.get('train', 'pretrained_path')))
@@ -57,6 +60,7 @@ def _main(args):
 
     #model.compile(optimizer=Adam(lr=3e-3), loss='mean_absolute_error', metrics=['accuracy'])
     model.compile(optimizer=Adam(), loss='mean_absolute_error', metrics=['accuracy'])
+    model_test.compile(optimizer=Adam(), loss='mean_absolute_error', metrics=['accuracy'])
 
     # ** setup keras callback
     filename = 'ep{epoch:03d}-loss{loss:.3f}.h5'
@@ -68,17 +72,17 @@ def _main(args):
     # early_stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=25, verbose=1)
 
     #print model information
-    print(model.summary())
+    print(model_test.summary())
     #sys.exit()
 
     # ** start training
-    model.fit_generator(generator       = train_generator,
+    model_test.fit_generator(generator       = train_generator,
                         epochs          = epochs,
                         #callbacks       = [checkpoint, scheduler],
                         callbacks       = [checkpoint],
                         )
 
-    model.save(os.path.join(ROOT_DIR, save_path))
+    model_test.save(os.path.join(ROOT_DIR, save_path))
 
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser(description='')
