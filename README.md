@@ -1,6 +1,6 @@
 # Senior-Project
 ***
-## Requirments
+## Requirements
 ```
 python3
 PIL >= 7.0.0
