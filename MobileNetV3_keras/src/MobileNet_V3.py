@@ -169,7 +169,7 @@ small_config_list = [[16,  (3, 3), (2, 2), 16,  False, False, True,  'RE', 0],
 
 """ build MobileNet V3 model """
 if __name__ == '__main__':
-    model = build_mobilenet_v3(input_size=416, num_outputs=10, model_type='smal', pooling_type='avg', include_top=True)
+    model = build_mobilenet_v3(input_size=416, num_outputs=10, model_type='small', pooling_type='avg', include_top=True)
 
     print(model.summary())
     print(model.layers)

@@ -7,7 +7,7 @@ import numpy as np
 from keras.models import load_model
 from src.generator import DataGenerator
 from src.learning_rate_schedule import learning_rate_scheduler
-from src.MobileNet_V3 import build_mobilenet_v3
+from src.MobileNet_V3 import build_mobilenet_v3, Hswish
 from keras.optimizers import Adam
 from keras.callbacks import (ModelCheckpoint,
                              LearningRateScheduler,
@@ -50,8 +50,11 @@ def _main(args):
 
     # ** initalize model
     try:
-        model = load_model(os.path.join(ROOT_DIR, onfig_client.get('train', 'pretrained_path')))
+        #model = load_model(os.path.join(ROOT_DIR, config_client.get('train', 'pretrained_path')))
+        model = load_model(os.path.join(ROOT_DIR, config_client.get('train', 'pretrained_path')),
+                           custom_objects={'Hswish':Hswish})
     except Exception as e:
+        print("Error: {0}".format(e))
         logging.info('Failed to load pre-trained model.')
         model = build_mobilenet_v3(input_width, input_height, num_outputs, model_size, pooling_type)
 
