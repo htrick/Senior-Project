@@ -117,6 +117,7 @@ def build_mobilenet_v3(input_width=640, input_height=360, num_outputs=128, model
     pooled_shape = (1, 1, net._keras_shape[-1])
 
     net = Reshape(pooled_shape)(net)
+
     #net = Conv2D(1280, (1, 1), strides=(1, 1), padding='valid', use_bias=True)(net)
     net = Conv2D(300, (1, 1), strides=(1, 1), padding='valid', use_bias=True)(net)
 
