@@ -6,25 +6,42 @@ import os
 import sys
 import shutil
 from PIL import Image  
+from random import randint
 
 '''Extract input and expected output data from the csv file'''
 def main():
    numArgs = len(sys.argv)
+   validPercent = 0.15
 
    args = sys.argv
    if (numArgs == 2):
       if (args[1] == '-c'):
          cleanData()
          return
-   if (numArgs == 3):
-      if (args[1] == '-a'):
-         downloadImageData(args[2], '-a');
-         return
-      elif (args[1] == '-n'):
-         downloadImageData(args[2], '-n');
-         return
 
-   print("Usage: python3 dataExtractor.py -c | -a <filename.csv> | -n <filename.csv>")
+   if (numArgs == 3 or numArgs == 5):
+      #Download the images and their associate data
+      if (args[1] == '-a'):
+         images = downloadImageData(args[2], '-a');
+      elif (args[1] == '-n'):
+         images = downloadImageData(args[2], '-n');
+
+      #Determine new percentage of images to use fro validation
+      if (numArgs == 5 and args[3] == '-p'):
+         try:
+            validPercent = float(args[4])
+            if validPercent < 0 or validPercent > 1:
+               print("Percentge used for the validation set must be a float between 0-1")
+               return
+         except:
+            print("Percentge used for the validation set must be a float between 0-1")
+            return
+      #Split images into training and validation directories
+      print("Splitting images into training and validation")
+      splitImages(images, validPercent)
+      return
+
+   print("Usage: python3 dataExtractor.py -c | -a <filename.csv> [-p <0-1>] | -n <filename.csv> [-p <0-1>]")
    return
 
 '''Remove all the directories and files containing data information'''
@@ -50,6 +67,10 @@ def cleanData():
          shutil.rmtree(dirPath + '/Blacklist_Masks')
       if os.path.isdir(dirPath + '/Whitelist_Masks'):
          shutil.rmtree(dirPath + '/Whitelist_Masks')
+      if os.path.isdir(dirPath + '/Training_Images'):
+         shutil.rmtree(dirPath + '/Training_Images')
+      if os.path.isdir(dirPath + '/Validation_Images'):
+         shutil.rmtree(dirPath + '/Validation_Images')
       if os.path.isfile(dirPath + '/Whitelisted_Images.txt'):
          os.remove(dirPath + '/Whitelisted_Images.txt')
       if os.path.isfile(dirPath + '/Blacklisted_Images.txt'):
@@ -58,13 +79,16 @@ def cleanData():
       print("Error: {0}".format(err))
       return
 
-'''Download the image and mask data from the .csv file'''
+'''Download the image and mask data from the .csv file. Return the list of
+   images that were downloaded'''
 def downloadImageData(csvFile, flag):
    try:
       imageFile = open(csvFile, 'r') #Open the csv file
    except:
       print("Error opening file: " + csvFile)
       return
+
+   images = []
 
    reader = csv.DictReader(imageFile)
    try:
@@ -120,6 +144,8 @@ def downloadImageData(csvFile, flag):
       newImg = newImg.resize((640, 360))  #Resize the image to be 640x360
       newImg.save(dirPath + "/Input_Images/" + row['ID'] + ".jpg")
       newImg.close()
+      #Save the name of the original image
+      images.append(row['ID'] + ".jpg")
 
       #Download the mask for the image
       print("Getting Mask")
@@ -179,6 +205,8 @@ def downloadImageData(csvFile, flag):
    whiteList.close()
    blackList.close()
 
+   return images
+
 '''Download the image from the given URL'''
 def getImageFromURL(url):
    image = None
@@ -232,7 +260,41 @@ def checkForBlackEdges(pixels, width, height):
          blackEdge = False
          break
 
-   return blackEdge      
+   return blackEdge   
+
+'''Split the newly downloaded images into training and validation directories'''
+def splitImages(images, validPercent):
+   dirPath = os.getcwd() #Get the current directory path
+
+   #Make the directories for the training and validation images
+   try:
+      if not os.path.isdir(dirPath + '/Training_Images'):
+         os.mkdir(dirPath + '/Training_Images')
+      if not os.path.isdir(dirPath + '/Validation_Images'):
+         os.mkdir(dirPath + '/Validation_Images')
+   except OSError as err:
+      print("Error: {0}".format(err))
+      return
+
+   #Determine how many images to use for validation
+   numValid = round(len(images) * validPercent)
+   numChosen = 0;
+
+   #Save images to the validation directory randomly
+   while numChosen <= numValid-1:
+      index = randint(0, len(images)-1)
+      imgName = images.pop(index)
+      img = Image.open(dirPath + "/Input_Images/" + imgName)
+      img.save(dirPath + "/Validation_Images/" + imgName)
+      numChosen += 1;
+
+   #Save the rest of the images to the training directory
+   for imgName in images:
+      img = Image.open(dirPath + "/Input_Images/" + imgName)
+      img.save(dirPath + "/Training_Images/" + imgName)
+
+   return
+
 
 if __name__ == '__main__':
    main()

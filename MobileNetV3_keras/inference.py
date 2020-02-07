@@ -67,9 +67,6 @@ def main():
    input_width = config_client.getint('model', 'input_width')
    input_height = config_client.getint('model', 'input_height')
 
-   # ** Number of Outputs
-   num_outputs = config_client.getint('model', 'num_outputs')
-
    print("Loading Model")
    #Load the old model
    '''model = model = load_model(os.path.join(ROOT_DIR, weight_path),
