@@ -53,7 +53,9 @@ def _main(args):
     model_test = MobileNetV3_Small((360,640,3), num_outputs).build()
     # ** initalize model
     try:
-        model = load_model(os.path.join(ROOT_DIR, onfig_client.get('train', 'pretrained_path')))
+        #model = load_model(os.path.join(ROOT_DIR, config_client.get('train', 'pretrained_path')))
+        model = load_model(os.path.join(ROOT_DIR, config_client.get('train', 'pretrained_path')),
+                           custom_objects={'Hswish':Hswish})
     except Exception as e:
         logging.info('Failed to load pre-trained model.')
         model = build_mobilenet_v3(input_width, input_height, num_outputs, model_size, pooling_type)
@@ -65,6 +67,10 @@ def _main(args):
     # ** setup keras callback
     filename = 'ep{epoch:03d}-loss{loss:.3f}.h5'
     weights_directory = os.path.join(ROOT_DIR, 'weights')
+    
+    if not os.path.exists(weights_directory):
+      os.mkdir(weights_directory)
+
     save_path = os.path.join(weights_directory, filename)
     checkpoint = ModelCheckpoint(save_path, monitor='loss', save_best_only=True, period=50)
     scheduler = LearningRateScheduler(learning_rate_scheduler)
