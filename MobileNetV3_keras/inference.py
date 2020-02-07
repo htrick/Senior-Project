@@ -1,5 +1,7 @@
 from keras.models import load_model
 
+from keras import backend as K
+
 from src.MobileNet_V3 import Hswish
 import numpy as np
 
@@ -65,9 +67,18 @@ def main():
    input_width = config_client.getint('model', 'input_width')
    input_height = config_client.getint('model', 'input_height')
 
+   # ** Number of Outputs
+   num_outputs = config_client.getint('model', 'num_outputs')
+
    print("Loading Model")
-   model = model = load_model(os.path.join(ROOT_DIR, weight_path),
-                           custom_objects={'Hswish':Hswish})
+   #Load the old model
+   '''model = model = load_model(os.path.join(ROOT_DIR, weight_path),
+                           custom_objects={'Hswish':Hswish})'''
+
+   #Load the the new model
+   model = load_model(os.path.join(ROOT_DIR, weight_path),
+                               custom_objects={'_hard_swish':_hard_swish,
+                                               '_relu6':_relu6})
 
    #Run through the images and predict the free space
    n = 1
@@ -115,6 +126,16 @@ def image_augmentation(img):
 #Normalize the image
 def normalize(img):
    return img / 255.0
+
+def _relu6(x):
+   """Relu 6
+   """
+   return K.relu(x, max_value=6.0)
+
+def _hard_swish(x):
+   """Hard swish
+   """
+   return x * K.relu(x + 3.0, max_value=6.0) / 6.0
 
 if __name__ == '__main__':
    main()
