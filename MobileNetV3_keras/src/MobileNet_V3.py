@@ -117,6 +117,7 @@ def build_mobilenet_v3(input_width=640, input_height=360, num_outputs=128, model
     pooled_shape = (1, 1, net._keras_shape[-1])
 
     net = Reshape(pooled_shape)(net)
+
     #net = Conv2D(1280, (1, 1), strides=(1, 1), padding='valid', use_bias=True)(net)
     net = Conv2D(300, (1, 1), strides=(1, 1), padding='valid', use_bias=True)(net)
 
@@ -169,7 +170,7 @@ small_config_list = [[16,  (3, 3), (2, 2), 16,  False, False, True,  'RE', 0],
 
 """ build MobileNet V3 model """
 if __name__ == '__main__':
-    model = build_mobilenet_v3(input_size=416, num_outputs=10, model_type='small', pooling_type='avg', include_top=True)
+    model = build_mobilenet_v3(input_size=416, num_outputs=10, model_type='smal', pooling_type='avg', include_top=True)
 
     print(model.summary())
     print(model.layers)

@@ -7,12 +7,14 @@ import numpy as np
 from keras.models import load_model
 from src.generator import DataGenerator
 from src.learning_rate_schedule import learning_rate_scheduler
-from src.MobileNet_V3 import build_mobilenet_v3, Hswish
+from src.MobileNet_V3 import build_mobilenet_v3
 from keras.optimizers import Adam
 from keras.callbacks import (ModelCheckpoint,
                              LearningRateScheduler,
                              ReduceLROnPlateau,
                              EarlyStopping)
+
+from model.mobilenet_v3_small import MobileNetV3_Small
 
 logging.basicConfig(level=logging.INFO)
 
@@ -48,26 +50,21 @@ def _main(args):
     train_generator = DataGenerator(dir_path=train_directory, batch_size=batch_size, aug_freq=0, image_width=640, image_height=360)
     valid_generator = DataGenerator(dir_path=valid_directory, batch_size=batch_size, aug_freq=0, image_width=640, image_height=360)
 
+    model_test = MobileNetV3_Small((360,640,3), num_outputs).build()
     # ** initalize model
     try:
-        #model = load_model(os.path.join(ROOT_DIR, config_client.get('train', 'pretrained_path')))
-        model = load_model(os.path.join(ROOT_DIR, config_client.get('train', 'pretrained_path')),
-                           custom_objects={'Hswish':Hswish})
+        model = load_model(os.path.join(ROOT_DIR, onfig_client.get('train', 'pretrained_path')))
     except Exception as e:
-        print("Error: {0}".format(e))
         logging.info('Failed to load pre-trained model.')
         model = build_mobilenet_v3(input_width, input_height, num_outputs, model_size, pooling_type)
 
     #model.compile(optimizer=Adam(lr=3e-3), loss='mean_absolute_error', metrics=['accuracy'])
     model.compile(optimizer=Adam(), loss='mean_absolute_error', metrics=['accuracy'])
+    model_test.compile(optimizer=Adam(), loss='mean_absolute_error', metrics=['accuracy'])
 
     # ** setup keras callback
     filename = 'ep{epoch:03d}-loss{loss:.3f}.h5'
     weights_directory = os.path.join(ROOT_DIR, 'weights')
-
-    if not os.path.exists(weights_directory):
-      os.mkdir(weights_directory)
-
     save_path = os.path.join(weights_directory, filename)
     checkpoint = ModelCheckpoint(save_path, monitor='loss', save_best_only=True, period=50)
     scheduler = LearningRateScheduler(learning_rate_scheduler)
@@ -75,17 +72,17 @@ def _main(args):
     # early_stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=25, verbose=1)
 
     #print model information
-    print(model.summary())
+    print(model_test.summary())
     #sys.exit()
 
     # ** start training
-    model.fit_generator(generator       = train_generator,
+    model_test.fit_generator(generator       = train_generator,
                         epochs          = epochs,
                         #callbacks       = [checkpoint, scheduler],
                         callbacks       = [checkpoint],
                         )
 
-    model.save(os.path.join(ROOT_DIR, save_path))
+    model_test.save(os.path.join(ROOT_DIR, save_path))
 
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser(description='')
