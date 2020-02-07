@@ -60,3 +60,6 @@ The images and their mask data gathered from the dataExtractor.py script are sto
 * **Blacklist_Masks**: Stores all the image masks for images that have been blacklisted to validate that ther are no images whose mask was made correctly will not used.
 * **Whitelist_Images.txt**: Stores the names of all the images that have been whitelisted to be used as input.
 * **Blacklist_Images.txt**: Stores the names of all the images that have been blacklisted to not be used as input because they might have a labeling error.
+* **Training_Images**: Stroes a copy of the original input images that are to be uesed for training.
+* **Validation_Images**: Stroes a copy of the original input images that are to be used for validation.
+* **Model_Prediction**: Stores a copy of the predictions made by the model for each of the images in the "image_path" directory in the config file used.
