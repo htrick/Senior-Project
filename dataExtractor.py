@@ -12,6 +12,7 @@ from random import randint
 def main():
    numArgs = len(sys.argv)
    validPercent = 0.15
+   images = []
 
    args = sys.argv
    if (numArgs == 2):
@@ -25,6 +26,9 @@ def main():
          images = downloadImageData(args[2], '-a');
       elif (args[1] == '-n'):
          images = downloadImageData(args[2], '-n');
+      else:
+         print("Usage: python3 dataExtractor.py -c | -a <filename.csv> [-p <0-1>] | -n <filename.csv> [-p <0-1>]")
+         return
 
       #Determine new percentage of images to use fro validation
       if (numArgs == 5 and args[3] == '-p'):
@@ -36,7 +40,9 @@ def main():
          except:
             print("Percentge used for the validation set must be a float between 0-1")
             return
-      #Split images into training and validation directories
+
+      #Split images into training and validation directories,
+      #Creates new random splits on every call
       print("Splitting images into training and validation")
       splitImages(images, validPercent)
       return
@@ -129,9 +135,13 @@ def downloadImageData(csvFile, flag):
       imgNum += 1
       print("Image: " + str(imgNum), end = '')
 
+      #Save the name of the original image
+      imgName = row['ID'] + ".jpg"
+      images.append(imgName)
+
       '''Check if current image is already downloaded and only new images 
          need to be download. If it exists, continue to the next image'''
-      if (flag == '-n' and os.path.isfile(dirPath + "/Input_Images/" + row['ID'] + ".jpg")):
+      if (flag == '-n' and os.path.isfile(dirPath + "/Input_Images/" + imgName)):
          print(" Skipping Image")
          continue
 
@@ -142,10 +152,8 @@ def downloadImageData(csvFile, flag):
       newImg = Image.open(orgImg[0])
       newImg = newImg.convert("RGB")   #Convert the image to RGB format
       newImg = newImg.resize((640, 360))  #Resize the image to be 640x360
-      newImg.save(dirPath + "/Input_Images/" + row['ID'] + ".jpg")
+      newImg.save(dirPath + "/Input_Images/" + imgName)
       newImg.close()
-      #Save the name of the original image
-      images.append(row['ID'] + ".jpg")
 
       #Download the mask for the image
       print("Getting Mask")
@@ -163,7 +171,7 @@ def downloadImageData(csvFile, flag):
       maskData = []
 
       #Load the image to draw the extracted mask data on for validation
-      validationMaskImage = cv2.imread(dirPath + "/Input_Images/" + row['ID'] + ".jpg")
+      validationMaskImage = cv2.imread(dirPath + "/Input_Images/" + imgName)
 
       #Find the 128 points along the image that represent the boundary of free space
       for x in range(0, width, 5):
@@ -266,12 +274,14 @@ def checkForBlackEdges(pixels, width, height):
 def splitImages(images, validPercent):
    dirPath = os.getcwd() #Get the current directory path
 
-   #Make the directories for the training and validation images
+   #Remove any existing training and validation directories and remake them
    try:
-      if not os.path.isdir(dirPath + '/Training_Images'):
-         os.mkdir(dirPath + '/Training_Images')
-      if not os.path.isdir(dirPath + '/Validation_Images'):
-         os.mkdir(dirPath + '/Validation_Images')
+      if os.path.isdir(dirPath + '/Training_Images'):
+         shutil.rmtree(dirPath + '/Training_Images')
+      if os.path.isdir(dirPath + '/Validation_Images'):
+         shutil.rmtree(dirPath + '/Validation_Images')
+      os.mkdir(dirPath + '/Training_Images')
+      os.mkdir(dirPath + '/Validation_Images')
    except OSError as err:
       print("Error: {0}".format(err))
       return
