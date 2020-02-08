@@ -76,9 +76,8 @@ class DataGenerator(Sequence):
         return X, y
 
     def __data_generation(self, paths_batch_list, label_batch_list):
-        X = np.empty((self.batch_size, self.image_height, self.image_width, 3), dtype='float32')
-        y = np.empty((self.batch_size, len(label_batch_list[0])), dtype='float32')
-        #print (len(self.label_list[0]))
+        X = np.zeros((len(paths_batch_list), self.image_height, self.image_width, 3), dtype='float32')
+        y = np.zeros((len(label_batch_list), len(label_batch_list[0])), dtype='float32')
 
         for i, (path, label) in enumerate(zip(paths_batch_list, label_batch_list)):
             X[i, :, :, :] = self.__image_augmentation(cv2.imread(path))
