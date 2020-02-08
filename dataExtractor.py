@@ -23,9 +23,9 @@ def main():
    if (numArgs == 3 or numArgs == 5):
       #Download the images and their associate data
       if (args[1] == '-a'):
-         images = downloadImageData(args[2], '-a');
+         downloadImageData(args[2], '-a');
       elif (args[1] == '-n'):
-         images = downloadImageData(args[2], '-n');
+         downloadImageData(args[2], '-n');
       else:
          print("Usage: python3 dataExtractor.py -c | -a <filename.csv> [-p <0-1>] | -n <filename.csv> [-p <0-1>]")
          return
@@ -44,7 +44,7 @@ def main():
       #Split images into training and validation directories,
       #Creates new random splits on every call
       print("Splitting images into training and validation")
-      splitImages(images, validPercent)
+      splitImages(validPercent)
       return
 
    print("Usage: python3 dataExtractor.py -c | -a <filename.csv> [-p <0-1>] | -n <filename.csv> [-p <0-1>]")
@@ -94,8 +94,6 @@ def downloadImageData(csvFile, flag):
       print("Error opening file: " + csvFile)
       return
 
-   images = []
-
    reader = csv.DictReader(imageFile)
    try:
       if (flag == '-a'):
@@ -135,9 +133,8 @@ def downloadImageData(csvFile, flag):
       imgNum += 1
       print("Image: " + str(imgNum), end = '')
 
-      #Save the name of the original image
+      #The name of the original image
       imgName = row['ID'] + ".jpg"
-      images.append(imgName)
 
       '''Check if current image is already downloaded and only new images 
          need to be download. If it exists, continue to the next image'''
@@ -213,7 +210,7 @@ def downloadImageData(csvFile, flag):
    whiteList.close()
    blackList.close()
 
-   return images
+   return
 
 '''Download the image from the given URL'''
 def getImageFromURL(url):
@@ -271,7 +268,7 @@ def checkForBlackEdges(pixels, width, height):
    return blackEdge   
 
 '''Split the newly downloaded images into training and validation directories'''
-def splitImages(images, validPercent):
+def splitImages(validPercent):
    dirPath = os.getcwd() #Get the current directory path
 
    #Remove any existing training and validation directories and remake them
@@ -285,6 +282,9 @@ def splitImages(images, validPercent):
    except OSError as err:
       print("Error: {0}".format(err))
       return
+
+   #List all the images that have been downloaded, now and previously
+   images = os.listdir(dirPath + "/Input_Images")
 
    #Determine how many images to use for validation
    numValid = round(len(images) * validPercent)
@@ -304,7 +304,6 @@ def splitImages(images, validPercent):
       img.save(dirPath + "/Training_Images/" + imgName)
 
    return
-
 
 if __name__ == '__main__':
    main()

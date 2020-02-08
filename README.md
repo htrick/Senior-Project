@@ -8,7 +8,7 @@ opencv-python >= 4.1.2
 ```
 
 ## dataExtractor.py
-Functionality: Download the images and extract mask information from the given .csv file. If the -a flag is given, re-download all the images in the file. If the -n flag is given, download only new images in the file. If the -c flag is given, remove all the images and directories. If the -p flag is given, the following float will determine the percentage of images to use for validation. On each run of the script with the -a or -n flag will remove the old training and validation sets and generate a new split of training and validation images.
+Functionality: Download the images and extract mask information from the given .csv file. If the -a flag is given, re-download all the images in the file. If the -n flag is given, download only new images in the file. If the -c flag is given, remove all the images and directories. If the -p flag is given, the following float will determine the percentage of images to use for validation. On each run of the script with the -a or -n flag will remove the old training and validation sets and generate a new split of training and validation images based on all the images that are in the Input_Images directory.
 ```
 Usage: python3 dataExtractor.py -c | -a <filename.csv> [-p <0-1>] | -n <filename.csv> [-p <0-1>]
 ``` 
