@@ -48,7 +48,7 @@ def _main(args):
     valid_directory = config_client.get('data', 'valid')
 
     # ** initialize data generators
-    train_generator = DataGenerator(dir_path=train_directory, batch_size=batch_size, aug_freq=0, image_width=640, image_height=360)
+    train_generator = DataGenerator(dir_path=train_directory, batch_size=batch_size, aug_freq=0.5, image_width=640, image_height=360)
     valid_generator = DataGenerator(dir_path=valid_directory, batch_size=batch_size, aug_freq=0, image_width=640, image_height=360)
 
     model_test = MobileNetV3_Small((input_height,input_width,3), num_outputs).build()
@@ -66,14 +66,15 @@ def _main(args):
     model_test.compile(optimizer=Adam(), loss='mean_absolute_error', metrics=['accuracy'])
 
     # ** setup keras callback
-    filename = 'ep{epoch:03d}-loss{loss:.3f}.h5'
+    #filename = 'ep{epoch:03d}-loss{loss:.3f}.h5'
+    filename = 'ep-loss.h5'
     weights_directory = os.path.join(ROOT_DIR, 'weights')
 
     if not os.path.exists(weights_directory):
       os.mkdir(weights_directory)
 
     save_path = os.path.join(weights_directory, filename)
-    checkpoint = ModelCheckpoint(save_path, monitor='loss', save_best_only=True, period=50)
+    checkpoint = ModelCheckpoint(save_path, monitor='val_loss', save_best_only=True, period=1)
     scheduler = LearningRateScheduler(learning_rate_scheduler)
     # reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=5, verbose=1)
     # early_stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=25, verbose=1)
@@ -84,6 +85,7 @@ def _main(args):
 
     # ** start training
     model_test.fit_generator(generator       = train_generator,
+                        validation_data = valid_generator,
                         epochs          = epochs,
                         #callbacks       = [checkpoint, scheduler],
                         callbacks       = [checkpoint],
