@@ -4,7 +4,7 @@
 """
 
 from keras.models import Model
-from keras.layers import Input, Conv2D, GlobalAveragePooling2D, Reshape
+from keras.layers import Input, Conv2D, GlobalAveragePooling2D, Reshape, Dropout
 from keras.layers import Flatten, Dense
 from keras.utils.vis_utils import plot_model
 
@@ -44,33 +44,52 @@ class MobileNetV3_Small(MobileNetBase):
         x = self._bottleneck(x, 24, (3, 3), e=72, s=2, squeeze=False, nl='RE')
         x = self._bottleneck(x, 24, (3, 3), e=88, s=1, squeeze=False, nl='RE')
         x = self._bottleneck(x, 40, (5, 5), e=96, s=2, squeeze=True, nl='HS')
-        x = self._bottleneck(x, 40, (5, 5), e=240, s=1, squeeze=True, nl='HS')
-        x = self._bottleneck(x, 40, (5, 5), e=240, s=1, squeeze=True, nl='HS')
+
+        #x = self._bottleneck(x, 40, (5, 5), e=240, s=1, squeeze=True, nl='HS')
+        x = self._bottleneck(x, 40, (5, 5), e=200, s=1, squeeze=True, nl='HS')
+
+        #x = self._bottleneck(x, 40, (5, 5), e=240, s=1, squeeze=True, nl='HS')
+        x = self._bottleneck(x, 40, (5, 5), e=200, s=1, squeeze=True, nl='HS')
+
         x = self._bottleneck(x, 48, (5, 5), e=120, s=1, squeeze=True, nl='HS')
         x = self._bottleneck(x, 48, (5, 5), e=144, s=1, squeeze=True, nl='HS')
-        x = self._bottleneck(x, 96, (5, 5), e=288, s=2, squeeze=True, nl='HS')
-        #x = self._bottleneck(x, 96, (5, 5), e=576, s=1, squeeze=True, nl='HS')
-        x = self._bottleneck(x, 96, (5, 5), e=200, s=1, squeeze=True, nl='HS')
+
+        #x = self._bottleneck(x, 96, (5, 5), e=288, s=2, squeeze=True, nl='HS')
+        x = self._bottleneck(x, 96, (5, 5), e=200, s=2, squeeze=True, nl='HS')
 
         #x = self._bottleneck(x, 96, (5, 5), e=576, s=1, squeeze=True, nl='HS')
-        x = self._bottleneck(x, 96, (5, 5), e=200, s=1, squeeze=True, nl='HS')
+        x = self._bottleneck(x, 96, (5, 5), e=300, s=1, squeeze=True, nl='HS')
+
+        #x = self._bottleneck(x, 96, (5, 5), e=576, s=1, squeeze=True, nl='HS')
+        x = self._bottleneck(x, 96, (5, 5), e=300, s=1, squeeze=True, nl='HS')
 
         #x = self._conv_block(x, 576, (1, 1), strides=(1, 1), nl='HS')
-        x = self._conv_block(x, 200, (1, 1), strides=(1, 1), nl='HS')
+        x = self._conv_block(x, 400, (1, 1), strides=(1, 1), nl='HS')
+
+        #x = Dropout(0.3, name='Dropout')(x)
+
+
         x = GlobalAveragePooling2D()(x)
         #x = Reshape((1, 1, 576))(x)
-        x = Reshape((1, 1, 200))(x)
+        x = Reshape((1, 1, 400))(x)
 
         #x = Conv2D(1280, (1, 1), padding='same')(x)
-        x = Conv2D(300, (1, 1), padding='same')(x)
+        x = Conv2D(500, (1, 1), padding='same')(x)
+
         x = self._return_activation(x, 'HS')
 
         if self.include_top:
-            #x = Conv2D(128, (1, 1), padding='same', activation='linear')(x)
-            #net = Conv2D(num_outputs, (1, 1), strides=(1, 1), padding='valid', use_bias=True)(net)
-            x = Flatten()(x)
+            #testing
+            x = Dense(300, activation='relu')(x)
+            x = Dense(300, activation='relu')(x)
             x = Dense(self.num_outputs, activation='linear')(x)
-            #x = Reshape((self.n_class,))(x)
+            # x = Flatten()(x)
+
+            # x = Conv2D(self.num_outputs, (1, 1), padding='same', activation='linear')(x)
+            x = Reshape((self.num_outputs,))(x)
+
+            # x = Flatten()(x)
+            # x = Dense(self.num_outputs, activation='linear')(x)
 
         model = Model(inputs, x)
 
