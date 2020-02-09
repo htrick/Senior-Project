@@ -5,7 +5,7 @@ import cv2
 import os
 import sys
 import shutil
-from PIL import Image  
+from PIL import Image
 from random import randint
 
 '''Extract input and expected output data from the csv file'''
@@ -21,7 +21,7 @@ def main():
          return
 
    if (numArgs == 3 or numArgs == 5):
-      #Download the images and their associate data
+      #Download the images and their associated data
       if (args[1] == '-a'):
          downloadImageData(args[2], '-a');
       elif (args[1] == '-n'):
@@ -30,15 +30,15 @@ def main():
          print("Usage: python3 dataExtractor.py -c | -a <filename.csv> [-p <0-1>] | -n <filename.csv> [-p <0-1>]")
          return
 
-      #Determine new percentage of images to use fro validation
+      #Determine new percentage of images to use for validation
       if (numArgs == 5 and args[3] == '-p'):
          try:
             validPercent = float(args[4])
             if validPercent < 0 or validPercent > 1:
-               print("Percentge used for the validation set must be a float between 0-1")
+               print("Percentage used for the validation set must be a float between 0-1")
                return
          except:
-            print("Percentge used for the validation set must be a float between 0-1")
+            print("Percentage used for the validation set must be a float between 0-1")
             return
 
       #Split images into training and validation directories,
@@ -54,7 +54,7 @@ def main():
 def cleanData():
    confirm = "None"
    while (confirm.lower() != 'y' and confirm.lower() != 'n'):
-      confirm = input("Are you sure you want to delete all image directories and data? (y/n): ")  
+      confirm = input("Are you sure you want to delete all image directories and data? (y/n): ")
    if (confirm == 'n'):
       return
 
@@ -136,7 +136,7 @@ def downloadImageData(csvFile, flag):
       #The name of the original image
       imgName = row['ID'] + ".jpg"
 
-      '''Check if current image is already downloaded and only new images 
+      '''Check if current image is already downloaded and only new images
          need to be download. If it exists, continue to the next image'''
       if (flag == '-n' and os.path.isfile(dirPath + "/Input_Images/" + imgName)):
          print(" Skipping Image")
@@ -160,7 +160,7 @@ def downloadImageData(csvFile, flag):
       newMask = newMask.convert('L')   #Convert the mask to grayscale format
       newMask = newMask.resize((640, 360))  #Resize the mask to be 640x360
       newMask.save(dirPath + "/Image_Masks/" + row['ID'] + "_mask.jpg")
-      
+
       #Extract the mask data
       pixels = newMask.load()
       width, height = newMask.size
@@ -265,7 +265,7 @@ def checkForBlackEdges(pixels, width, height):
          blackEdge = False
          break
 
-   return blackEdge   
+   return blackEdge
 
 '''Split the newly downloaded images into training and validation directories'''
 def splitImages(validPercent):

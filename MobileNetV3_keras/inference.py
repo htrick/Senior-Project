@@ -94,7 +94,7 @@ def main():
       #Load the image to draw the extracted mask data on for validation
       validationMaskImage = cv2.imread(_id_path)
 
-      #Draw circles on the original image to show where the predicted free pace occurs
+      #Draw circles on the original image to show where the predicted free space occurs
       x = 0
       for i in range(len(prediction)):
          y = int(round(prediction[i] * input_height))
