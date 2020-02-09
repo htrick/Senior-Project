@@ -6,7 +6,6 @@ import configparser
 import numpy as np
 from keras.models import load_model
 from src.generator import DataGenerator
-from src.learning_rate_schedule import learning_rate_scheduler
 from src.MobileNet_V3 import build_mobilenet_v3
 from keras.optimizers import Adam
 from keras.callbacks import (ModelCheckpoint,
@@ -15,7 +14,7 @@ from keras.callbacks import (ModelCheckpoint,
                              EarlyStopping)
 
 from model.mobilenet_v3_small import MobileNetV3_Small
-from model.mobilenet_v2 import MobileNetv2
+#from model.mobilenet_v2 import MobileNetv2
 
 logging.basicConfig(level=logging.INFO)
 
@@ -48,18 +47,12 @@ def _main(args):
     valid_directory = config_client.get('data', 'valid')
 
     # ** initialize data generators
-    train_generator = DataGenerator(dir_path=train_directory, batch_size=batch_size, aug_freq=0.5, image_width=640, image_height=360)
-    valid_generator = DataGenerator(dir_path=valid_directory, batch_size=batch_size, aug_freq=0, image_width=640, image_height=360)
+    train_generator = DataGenerator(dir_path=train_directory, batch_size=batch_size, aug_freq=0.5, image_width=640, image_height=360, n=num_outputs)
+    valid_generator = DataGenerator(dir_path=valid_directory, batch_size=batch_size, aug_freq=0.5, image_width=640, image_height=360, n=num_outputs)
 
     model_test = MobileNetV3_Small((input_height,input_width,3), num_outputs).build()
     #model_test = MobileNetv2((input_height,input_width,3), num_outputs)
     # ** initalize model
-    try:
-        model = load_model(os.path.join(ROOT_DIR, config_client.get('train', 'pretrained_path')),
-                           custom_objects={'Hswish':Hswish})
-    except Exception as e:
-        logging.info('Failed to load pre-trained model.')
-        #model = build_mobilenet_v3(input_width, input_height, num_outputs, model_size, pooling_type)
 
     #model.compile(optimizer=Adam(lr=3e-3), loss='mean_absolute_error', metrics=['accuracy'])
     #model.compile(optimizer=Adam(), loss='mean_absolute_error', metrics=['accuracy'])
@@ -74,21 +67,24 @@ def _main(args):
       os.mkdir(weights_directory)
 
     save_path = os.path.join(weights_directory, filename)
-    checkpoint = ModelCheckpoint(save_path, monitor='val_loss', save_best_only=True, period=1)
-    scheduler = LearningRateScheduler(learning_rate_scheduler)
+    checkpoint = ModelCheckpoint(save_path, monitor='val_loss', save_best_only=True, period=1, verbose=1)
+    #scheduler = LearningRateScheduler(learning_rate_scheduler)
     # reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=5, verbose=1)
     # early_stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=25, verbose=1)
 
     #print model information
     print(model_test.summary())
-    #sys.exit()
 
     # ** start training
-    model_test.fit_generator(generator       = train_generator,
+    model_test.fit_generator(
+                        generator       = train_generator,
                         validation_data = valid_generator,
+                        steps_per_epoch = 400,
+                        validation_steps =100,
                         epochs          = epochs,
-                        #callbacks       = [checkpoint, scheduler],
                         callbacks       = [checkpoint],
+                        use_multiprocessing=True,
+                        workers=6
                         )
 
     model_test.save(os.path.join(ROOT_DIR, save_path))
