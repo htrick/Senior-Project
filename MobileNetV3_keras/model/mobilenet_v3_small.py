@@ -73,8 +73,12 @@ class MobileNetV3_Small(MobileNetBase):
         #x = Reshape((1, 1, 576))(x)
         x = Reshape((1, 1, 400))(x)
 
+        x = Dropout(0.3, name='Dropout')(x)
+
         #x = Conv2D(1280, (1, 1), padding='same')(x)
         x = Conv2D(500, (1, 1), padding='same')(x)
+
+        x = Dropout(0.3, name='Dropout1')(x)
 
         x = self._return_activation(x, 'HS')
 

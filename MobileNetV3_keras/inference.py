@@ -11,7 +11,7 @@ import cv2
 import configparser
 
 
-'''Run through the images in the given directory in the config file and determine the 
+'''Run through the images in the given directory in the config file and determine the
    predictions of the model, save the original image with the prediction overlayed'''
 def main():
    numArgs = len(sys.argv)
