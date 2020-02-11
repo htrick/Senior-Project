@@ -3,29 +3,19 @@ import cv2
 import sys
 import keras
 import numpy as np
-import imgaug as ia
-from imgaug import augmenters as iaa
-from imgaug import parameters as iap
-from imgaug.augmentables import Keypoint, KeypointsOnImage
 from keras.utils import Sequence
-# import Augmentor
+from augmentimages import AugmentImages
 
 class DataGenerator(Sequence):
-    def __init__(self, dir_path, batch_size=16, aug_freq=0.5, image_width=640, image_height=360, shuffle=True):
-        ia.seed(1) #FIXME - random seed for augmentation
+    def __init__(self, dir_path, batch_size=16, aug_freq=0.5, image_width=640, image_height=360, shuffle=True, n=128):
         self.dir_path = dir_path
         self.batch_size = batch_size
         self.image_width = image_width
         self.image_height = image_height
+        self.num_outputs = n
         self.aug_freq = aug_freq #probability of augmenting an image
         self.shuffle = shuffle #if true, randomized the files order each epoch
-        self.keypoint_data = {} #dictionary where key is filename and value is list of 128 points
-
-        #test augmentation using Augmentor, but may switch from this library
-        # self.p = Augmentor.Pipeline(dir_path)
-        # self.p.ground_truth("../Image_Masks")
-        # self.p.flip_left_right(probability=0.5)
-        # self.g = self.p.keras_generator(batch_size=1) #use generator
+        self.augment = AugmentImages(self.num_outputs)
 
         self.__get_all_paths() #get all filenames and output data
         self.on_epoch_end()
@@ -55,7 +45,6 @@ class DataGenerator(Sequence):
                     x = x.strip()
                     temp_list.append(float(x))
 
-                self.keypoint_data[_id] = temp_list #store the output data for augmentation
                 self.label_list.append(temp_list) #store the output data
 
         return None
@@ -76,17 +65,21 @@ class DataGenerator(Sequence):
         # ** generate batch data
         X, y = self.__data_generation(paths_batch_list, label_batch_list)
 
-        # print(len((next(self.g)[1])[0])) #this is for Augmentor
         return X, y
 
     def __data_generation(self, paths_batch_list, label_batch_list):
         X = np.zeros((len(paths_batch_list), self.image_height, self.image_width, 3), dtype='float32')
-        y = np.zeros((len(label_batch_list), len(label_batch_list[0])), dtype='float32')
+        y = np.zeros((len(label_batch_list), self.num_outputs), dtype='float32')
 
         for i, (path, label) in enumerate(zip(paths_batch_list, label_batch_list)):
             # for each batch, X is the array of image data and y is the array
             # of output data
-            X[i, :, :, :], y[i, :] = self.__image_augmentation(cv2.imread(path), label)
+            mask_path = path
+            mask_path= '../Image_Masks/' + mask_path.split('/')[2]
+
+            a,l = self.augment.augment_image(path,mask_path)
+            X[i, :, :, :] = a["image"]
+            y[i, :] = np.array(l)
 
         return X, y
 
@@ -98,7 +91,7 @@ class DataGenerator(Sequence):
         img_copy = img_copy[:, :, ::-1]
 
         # do augmentation
-        if True and self.aug_freq > np.random.uniform(0, 1, 1):
+        if self.aug_freq > np.random.uniform(0, 1, 1):
             img_aug, label = self.__augmentation_operations(img_copy, label)
         else:
             img_aug = img_copy
@@ -108,16 +101,17 @@ class DataGenerator(Sequence):
         return img_norm, label
 
     def __augmentation_operations(self, img, label):
-        kps = KeypointsOnImage([Keypoint(x=int(i*5), y=int(label[i]*img.shape[0])) \
-            for i in range(len(label))], shape=img.shape)
+        # kps = KeypointsOnImage([Keypoint(x=int(i*5), y=int(label[i]*img.shape[0])) \
+        #     for i in range(len(label))], shape=img.shape)
         # print (kps)
 
         seq = iaa.Sequential([
-            iaa.PerspectiveTransform(scale=(.01, .15)) # change brightness, doesn't affect keypoints
+            #iaa.PerspectiveTransform(scale=(.01, .15)) # change brightness, doesn't affect keypoints
+            iaa.AdditiveGaussianNoise(scale=(0, 0.2*255))
         ])
 
         # Augment keypoints and images.
-        image_aug, kps_aug = seq(image=img, keypoints=kps)
+        #image_aug, kps_aug = seq(image=img, keypoints=kps)
 
         return img,label
 

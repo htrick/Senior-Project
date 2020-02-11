@@ -21,13 +21,13 @@ Usage: python3 dataExtractor.py -c | -a <filename.csv> [-p <0-1>] | -n <filename
 * -p: An optional flag argument to use with -a or -n to specify what percentage of the downloaded images to set aside for validation, percentage is to be a float between 0-1.0. Default percentage is 0.15
 
 ## inference.py
-Functionlaity: Using the provided config file, make a prediction of the 128 points representing the free space in each image in the directory in the config file. Then overlay the 128 points onto the original image and save it.
+Functionality: Using the provided config file, make a prediction of the 128 points representing the free space in each image in the directory in the config file. Then overlay the 128 points onto the original image and save it.
 ```
 Usage: python3 inference.py -c <config_file> [-w <weights>]
 ```
 
 ## Comand Line Arguments
-* -c: A flag argument to sepecify the next argument given is the config file to use.
+* -c: A flag argument to specify the next argument given is the config file to use.
 * -w: An optional flag argument to specify a different weights file to use over the file present in the config file
 
 ## Config File
