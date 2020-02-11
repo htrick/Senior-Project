@@ -5,6 +5,7 @@ import cv2
 import os
 import sys
 import shutil
+import json
 from PIL import Image
 from random import randint
 
@@ -141,6 +142,19 @@ class DataExtractor:
          #The name of the original image
          imgName = row['ID'] + ".jpg"
 
+         #Get the review score of the image
+         review = row['Reviews']
+         #Get the dictionary representation from the column
+         review = review[1 : len(review) - 1]
+         #Load the review column as a dictionary
+         review = json.loads(str(review))
+         score = review['score']
+
+         #If the image has a negative score, do not download it
+         if score < 0:
+            print('\nImage ' + row['ID'] + " has a negative review score. Skipping image")
+            continue
+
          '''Check if current image is already downloaded and only new images
             need to be download. If it exists, continue to the next image'''
          if (flag == '-n' and os.path.isfile(dirPath + "/Input_Images/" + imgName)):
@@ -159,7 +173,10 @@ class DataExtractor:
 
          #Download the mask
          print("Getting Mask")
-         maskUrl = row['Masks'].split('\"')[3]
+
+         #Get the mask url of the image
+         mask = json.loads(row['Masks'])
+         maskUrl = mask['Free space']
          orgMask = self.getImageFromURL(maskUrl) #Retrieve the original mask
 
          #Failed to download the mask
