@@ -10,7 +10,7 @@ opencv-python >= 4.1.2
 ## dataExtractor.py
 **Functionality**: Download the images and extract mask information from the given .csv file. If the -a flag is given, re-download all the images in the file. If the -n flag is given, download only new images in the file. If the -c flag is given, remove all the images and directories. If the -p flag is given, the following float will determine the percentage of images to use for validation. On each run of the script with the -a or -n flag will remove the old training and validation sets and generate a new split of training and validation images based on all the images that are in the Input_Images directory.
 ```
-Usage: python3 dataExtractor.py -c | -a <filename.csv> [-p <0-1>] | -n <filename.csv> [-p <0-1>]
+Usage: python3 dataExtractor.py -c | -a <filename.csv> -f <filename> [-p <0-1>] | -n <filename.csv> -f <filename> [-p <0-1>]
 ``` 
 
 ## Command Line Arguments
@@ -19,6 +19,7 @@ Usage: python3 dataExtractor.py -c | -a <filename.csv> [-p <0-1>] | -n <filename
 * -a: A flag argument to re-download all of the images from the given .csv file that follows
 * -n: A flag argument to skip already downloaded images and their associated data and download any new images and their associated data from the given .csv file that follows
 * -p: An optional flag argument to use with -a or -n to specify what percentage of the downloaded images to set aside for validation, percentage is to be a float between 0-1.0. Default percentage is 0.15
+* -f: A flag argument to specify the config file to use to determine the height and width of the images to save, and the number of points to extract from the image masks
 
 ## inference.py
 **Functionality**: Using the provided config file, make a prediction of the num_outputs points representing the free space in each image in the directory in the config file. Then overlay the num_outputs points onto the original image and save it.

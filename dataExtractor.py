@@ -6,6 +6,7 @@ import os
 import sys
 import shutil
 import json
+import configparser
 from PIL import Image
 from random import randint
 
@@ -13,43 +14,99 @@ class DataExtractor:
    '''Extract input and expected output data from the csv file'''
    def _main(self):
       numArgs = len(sys.argv)
-      validPercent = 0.15
-
       args = sys.argv
-      if (numArgs == 2):
-         if (args[1] == '-c'):
-            self.cleanData()
-            return
 
-      if (numArgs == 3 or numArgs == 5):
-         #Download the images and their associated data
-         if (args[1] == '-a'):
-            self.downloadImageData(args[2], '-a');
-         elif (args[1] == '-n'):
-            self.downloadImageData(args[2], '-n');
-         else:
-            print("Usage: python3 dataExtractor.py -c | -a <filename.csv> [-p <0-1>] | -n <filename.csv> [-p <0-1>]")
-            return
+      flags = self.parseCommandLine(numArgs, args);
+      if flags == "":
+         return
 
-         #Determine new percentage of images to use for validation
-         if (numArgs == 5 and args[3] == '-p'):
+      if flags == 'c':
+         self.cleanData()
+         return
+
+      validPercent = 0.15
+      configFile = None
+      dataFile = None
+      downloadType = None
+
+      for f in flags:
+         index = args.index('-'+f)
+
+         #Save the file to download the images from
+         if f == 'n' or f == 'a':
+            dataFile = args[index+1]
+            downloadType = f
+
+         #Save the percentage to use for validation
+         elif f == 'p':
             try:
-               validPercent = float(args[4])
-               if validPercent < 0 or validPercent > 1:
-                  print("Percentage used for the validation set must be a float between 0-1")
-                  return
+               validPercent = float(args[index+1])
             except:
                print("Percentage used for the validation set must be a float between 0-1")
                return
 
-         #Split images into training and validation directories,
-         #Creates new random splits on every call
-         print("Splitting images into training and validation")
-         self.splitImages(validPercent)
+         #Save the configuration file
+         elif f == 'f':
+            configFile = args[index+1]
+            print(configFile)
+
+      #Not all the required arguments were provided
+      if configFile is None or dataFile is None or downloadType is None:
+         print("Usage: python3 dataExtractor.py -c | -a <filename.csv> -f <filename> [-p <0-1>] |" +\
+               "-n <filename.csv> -f <filename> [-p <0-1>]")
          return
 
-      print("Usage: python3 dataExtractor.py -c | -a <filename.csv> [-p <0-1>] | -n <filename.csv> [-p <0-1>]")
+      #Download the images and their associated data
+      self.downloadImageData(downloadType, dataFile, configFile)
+
+      #Split images into training and validation directories,
+      #Creates new random splits on every call
+      print("Splitting images into training and validation")
+      self.splitImages(validPercent)
       return
+
+   '''Parse the command line to find what flags were given'''
+   def parseCommandLine(self, numArgs, args):
+      flags = ""
+
+      for i in range(numArgs):
+         if args[i] == '-c':
+            if numArgs != 2:
+               print("Usage: python3 dataExtractor.py -c | -a <filename.csv> -f <filename> [-p <0-1>] |" +\
+                     "-n <filename.csv> -f <filename> [-p <0-1>]")
+               return ""
+            flags += 'c'
+            return flags
+
+         if args[i] == '-n':
+            if 'a' in flags or 'n' in flags:
+               print("Usage: python3 dataExtractor.py -c | -a <filename.csv> -f <filename> [-p <0-1>] |" +\
+                     "-n <filename.csv> -f <filename> [-p <0-1>]")
+               return ""
+            flags += 'n'
+
+         if args[i] == '-a':
+            if 'n' in flags or 'a' in flags:
+               print("Usage: python3 dataExtractor.py -c | -a <filename.csv> -f <filename> [-p <0-1>] |" +\
+                     "-n <filename.csv> -f <filename> [-p <0-1>]")
+               return ""
+            flags += 'a'
+
+         if args[i] == '-p':
+            if 'p' in flags:
+               print("Usage: python3 dataExtractor.py -c | -a <filename.csv> -f <filename> [-p <0-1>] |" +\
+                     "-n <filename.csv> -f <filename> [-p <0-1>]")
+               return ""
+            flags += 'p'
+
+         if args[i] == '-f':
+            if 'f' in flags:
+               print("Usage: python3 dataExtractor.py -c | -a <filename.csv> -f <filename> [-p <0-1>] |" +\
+                     "-n <filename.csv> -f <filename> [-p <0-1>]")
+               return ""
+            flags += 'f'
+
+      return flags   
 
    '''Remove all the directories and files containing data information'''
    def cleanData(self):
@@ -90,32 +147,30 @@ class DataExtractor:
          return
 
    '''Download the image and mask data from the .csv file.'''
-   def downloadImageData(self, csvFile, flag):
-      imgWidth = imgHeight = numOutputs = None
-      #Get the new image width/height and number of points to gather from the masks
-      while imgWidth is None or imgHeight is None or numOutputs is None:
-         try:
-            while imgWidth is None:
-               imgWidth = int(input("Enter width to store images with: "))
-            while imgHeight is None:
-               imgHeight = int(input("Enter height to store images with: "))
-            while numOutputs is None:
-               numOutputs = int(input("Enter number of points to extract from each mask: "))
-         except:
-            print("Input must be an integer");
-
+   def downloadImageData(self, flag, csvFile, configFile):
       try:
          imageFile = open(csvFile, 'r') #Open the csv file
       except:
          print("Error opening file: " + csvFile)
          return
 
+      # ** get configuration
+      config_client = configparser.ConfigParser()
+      config_client.read(configFile)
+
+      # ** Image Sizes
+      imgWidth = config_client.getint('model', 'input_width')
+      imgHeight = config_client.getint('model', 'input_height')
+
+      # ** Number of outputs
+      numOutputs = config_client.getint('model', 'num_outputs')
+
       reader = csv.DictReader(imageFile)
       try:
-         if (flag == '-a'):
+         if (flag == 'a'):
             whiteList = open("Whitelisted_Images.txt", 'w')
             blackList = open("Blacklisted_Images.txt", 'w')
-         elif (flag == '-n'):
+         elif (flag == 'n'):
             whiteList = open("Whitelisted_Images.txt", 'a')
             blackList = open("Blacklisted_Images.txt", 'a')
          else:
@@ -170,7 +225,7 @@ class DataExtractor:
 
          '''Check if current image is already downloaded and only new images
             need to be download. If it exists, continue to the next image'''
-         if (flag == '-n' and os.path.isfile(dirPath + "/Input_Images/" + imgName)):
+         if (flag == 'n' and os.path.isfile(dirPath + "/Input_Images/" + imgName)):
             print(" Skipping Image")
             continue
 
