@@ -67,6 +67,9 @@ def main():
    input_width = config_client.getint('model', 'input_width')
    input_height = config_client.getint('model', 'input_height')
 
+   # ** Number of outputs
+   num_outputs = config_client.getint('model', 'num_outputs')
+
    print("Loading Model")
    #Load the old model
    '''model = model = load_model(os.path.join(ROOT_DIR, weight_path),
@@ -79,6 +82,7 @@ def main():
 
    #Run through the images and predict the free space
    n = 1
+   stepSize = input_width // num_outputs
    for _id in os.listdir(image_dir):
       #Get the image
       _id_path = os.path.join(image_dir, _id)
@@ -99,7 +103,7 @@ def main():
       for i in range(len(prediction)):
          y = int(round(prediction[i] * input_height))
          validationMaskImage = cv2.circle(validationMaskImage, (x, y), 1, (0, 255, 0), -1)
-         x += 5
+         x += stepSize
 
       #Save the overlayed image
       cv2.imwrite(inference_dir + "/" + _id.replace(".jpg", "") + "_inference.jpg", validationMaskImage)

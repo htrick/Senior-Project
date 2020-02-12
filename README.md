@@ -21,7 +21,7 @@ Usage: python3 dataExtractor.py -c | -a <filename.csv> [-p <0-1>] | -n <filename
 * -p: An optional flag argument to use with -a or -n to specify what percentage of the downloaded images to set aside for validation, percentage is to be a float between 0-1.0. Default percentage is 0.15
 
 ## inference.py
-**Functionality**: Using the provided config file, make a prediction of the 128 points representing the free space in each image in the directory in the config file. Then overlay the 128 points onto the original image and save it.
+**Functionality**: Using the provided config file, make a prediction of the num_outputs points representing the free space in each image in the directory in the config file. Then overlay the num_outputs points onto the original image and save it.
 ```
 Usage: python3 inference.py -c <config_file> [-w <weights>]
 ```
@@ -37,6 +37,7 @@ Argument|Description|Type|Default
 ---|---|---|---
 input_width|Input width of MobileNet V3 model.|int|640
 input_height|Input height of MobileNet V3 model.|int|360
+num_outputs|Number of points genreated to define the boundary of free space|int|128
 
 ### **gpu**
 Argument|Description|Type|Default

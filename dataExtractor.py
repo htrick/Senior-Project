@@ -91,6 +91,19 @@ class DataExtractor:
 
    '''Download the image and mask data from the .csv file.'''
    def downloadImageData(self, csvFile, flag):
+      imgWidth = imgHeight = numOutputs = None
+      #Get the new image width/height and number of points to gather from the masks
+      while imgWidth is None or imgHeight is None or numOutputs is None:
+         try:
+            while imgWidth is None:
+               imgWidth = int(input("Enter width to store images with: "))
+            while imgHeight is None:
+               imgHeight = int(input("Enter height to store images with: "))
+            while numOutputs is None:
+               numOutputs = int(input("Enter number of points to extract from each mask: "))
+         except:
+            print("Input must be an integer");
+
       try:
          imageFile = open(csvFile, 'r') #Open the csv file
       except:
@@ -173,7 +186,6 @@ class DataExtractor:
 
          #Download the mask
          print("Getting Mask")
-
          #Get the mask url of the image
          mask = json.loads(row['Masks'])
          maskUrl = mask['Free space']
@@ -185,16 +197,18 @@ class DataExtractor:
             continue
 
          #Save the original image
+         #print("Saving original image")
          newImg = Image.open(orgImg[0])
          newImg = newImg.convert("RGB")   #Convert the image to RGB format
-         newImg = newImg.resize((640, 360))  #Resize the image to be 640x360
+         newImg = newImg.resize((imgWidth, imgHeight))  #Resize the image to be 640x360
          newImg.save(dirPath + "/Input_Images/" + imgName)
          newImg.close()
 
-         #Save the mask for the image         
+         #Save the mask for the image   
+         #print("Saving mask")      
          newMask = Image.open(orgMask[0])
          newMask = newMask.convert('L')   #Convert the mask to grayscale format
-         newMask = newMask.resize((640, 360))  #Resize the mask to be 640x360
+         newMask = newMask.resize((imgWidth, imgHeight))  #Resize the mask to be 640x360
          newMask.save(dirPath + "/Image_Masks/" + row['ID'] + "_mask.jpg")
 
          maskDataFile = open(dirPath + "/Mask_Data/" + row['ID'] + "_mask_data.txt", 'w')
@@ -203,7 +217,8 @@ class DataExtractor:
          width, height = newMask.size
 
          #Extract the mask data
-         points = self.extractMaskPoints(pixels, width, height)
+         #print("Extracting points")
+         points = self.extractMaskPoints(pixels, width, height, numOutputs)
 
          #Load the image to draw the extracted mask data on for validation
          validationMaskImage = cv2.imread(dirPath + "/Input_Images/" + imgName)
@@ -211,19 +226,22 @@ class DataExtractor:
          '''Write the mask data to a file in x,y column format, where y is normalized between 0 and 1 and 
             draw the extracted mask points over the original image'''
          x = 0;
+         stepSize = imgWidth // numOutputs
+         #print("Drawing points")
          for y in points:
             #Draw a circle on the original image to validate the correct mask data is extracted
             validationMaskImage = cv2.circle(validationMaskImage, (x, round(y * (height-1))), 1, (0, 255, 0), -1)
 
             #Write the mask point to the file
             maskDataFile.write(str(x) + ',' + str(y) + '\n')
-            x += 5
+            x += stepSize
 
          #Save the overlayed image
          cv2.imwrite(dirPath + "/Mask_Validation/" + row['ID'] + "_validation_mask.jpg",
                      validationMaskImage)
 
          #Check if the mask for the current image can be whitelisted
+         #print("Validating mask")
          inValid = self.checkForBlackEdges(pixels, width, height)
          if not inValid:
             newMask.save(dirPath + "/Whitelist_Masks/" + row['ID'] + "_mask.jpg")
@@ -244,18 +262,19 @@ class DataExtractor:
 
    '''Extract 128 points representing the bounds of the image mask between 0-1
       Takes in the pixel array representing the mask, and the width & height of the mask'''
-   def extractMaskPoints(self, pixels, width, height):
+   def extractMaskPoints(self, pixels, width, height, numOutputs):
       found = False
       maskData = []
+      stepSize = width // numOutputs
 
-      #Find the 128 points along the image that represent the boundary of free space
-      #Find the boundary goint from botto (359) to top (0)
-      for x in range(0, width, 5):
+      #Find the numOutputs points along the image that represent the boundary of free space
+      #Find the boundary goint from bottom (height - 1) to top (0)
+      for x in range(0, width, stepSize):
          for y in range(height-1, -1, -1):
             color = pixels[x,y]
             if color == 0:
                break
-         maskData.append(float(y) / float(height - 1))
+         maskData.append(y / (height - 1))
          found = False
 
       return maskData
@@ -265,7 +284,7 @@ class DataExtractor:
       image = None
       trys = 0
       #Attempt to download the image 5 times before quitting
-      while (image == None and trys < 5):
+      while (trys < 5):
          try:
             return urllib.request.urlretrieve(url) #Retrieve the image from the URL
          except urllib.error.URLError as err:
