@@ -221,7 +221,7 @@ class DataExtractor:
             runningScore += entry['score']
 
          #If the image has a negative score, do not download it
-         if runningScore < 0:
+         if runningScore <= 0:
             print('\nImage ' + row['ID'] + " has a negative review score. Skipping image")
             continue
 
