@@ -3,6 +3,7 @@ import cv2
 import sys
 import keras
 import numpy as np
+import threading
 from keras.utils import Sequence
 from augmentimages import AugmentImages
 
@@ -13,6 +14,7 @@ class DataGenerator(Sequence):
         self.image_width = image_width
         self.image_height = image_height
         self.num_outputs = n
+        self.lock = threading.Lock()
         self.aug_freq = aug_freq #probability of augmenting an image
         self.shuffle = shuffle #if true, randomized the files order each epoch
         self.augment = AugmentImages(self.num_outputs)
@@ -53,29 +55,35 @@ class DataGenerator(Sequence):
         return int(np.floor(len(self.paths_list) / self.batch_size))
 
     def __getitem__(self, index):
-        # ** get batch indices
-        start_index = index * self.batch_size
-        end_index = min((index + 1) * self.batch_size, len(self.paths_list))
-        indices = self.indices[start_index:end_index]
+        with self.lock:
+            # ** get batch indices
+            start_index = index * self.batch_size
+            end_index = min((index + 1) * self.batch_size, len(self.paths_list))
+            indices = self.indices[start_index:end_index]
 
-        # ** get batch inputs
-        paths_batch_list = [self.paths_list[i] for i in indices]
-        label_batch_list = [self.label_list[i] for i in indices]
+            # ** get batch inputs
+            paths_batch_list = [self.paths_list[i] for i in indices]
+            label_batch_list = [self.label_list[i] for i in indices]
 
-        # ** generate batch data
-        X, y = self.__data_generation(paths_batch_list, label_batch_list)
+            assert len(paths_batch_list) == len(label_batch_list)
 
-        return X, y
+            # ** generate batch data
+            X, y = self.__data_generation(paths_batch_list, label_batch_list)
+
+            return X, y
 
     def __data_generation(self, paths_batch_list, label_batch_list):
         X = np.zeros((len(paths_batch_list), self.image_height, self.image_width, 3), dtype='float32')
         y = np.zeros((len(label_batch_list), self.num_outputs), dtype='float32')
 
         for i, (path, label) in enumerate(zip(paths_batch_list, label_batch_list)):
+        #for i, path in enumerate(paths_batch_list):
             # for each batch, X is the array of image data and y is the array
             # of output data
             mask_path = path
+            mask_path = mask_path.replace('.','_mask.')
             mask_path= '../Image_Masks/' + mask_path.split('/')[2]
+            #print (mask_path)
 
             a,l = self.augment.augment_image(path,mask_path)
             X[i, :, :, :] = a["image"]

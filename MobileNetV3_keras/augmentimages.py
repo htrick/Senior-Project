@@ -31,11 +31,11 @@ class AugmentImages:
                 MotionBlur(p=0.2),
                 #MedianBlur(blur_limit=3, p=0.1),
                 Blur(blur_limit=3, p=0.1),
-            ], p=0.2),
+            ], p=0.1),
             OneOf([
                ShiftScaleRotate(shift_limit=0.0625, scale_limit=0.2, rotate_limit=5, p=0.9),
-               IAAPerspective(scale=(.05,.1))
-            ], p=0.5)
+               IAAPerspective(scale=(.02,.05))
+            ], p=0.3)
         ], p=p)
 
     '''This function takes the path to the image and the path to the image
@@ -46,13 +46,15 @@ class AugmentImages:
 
         if img is None:
             raise '** Failed to read image.'
+        if img_mask is None:
+            raise '** Failed to read mask image.'
 
         # convert the image to RGB
         img_copy = img.copy()
         img_copy = img_copy[:, :, ::-1]
 
         #run the augmentation
-        augmentation = self.augmentation_pipeline(p=0.9)
+        augmentation = self.augmentation_pipeline(p=0.5)
         data = {"image": img_copy, "mask": img_mask}
         augmented = augmentation(**data)
 
@@ -69,13 +71,13 @@ class AugmentImages:
                 point = mask[row,i] #point is a 3-element list (RGB)
                 if point[0] < 128: #if the color is black, then save the point
                     found = 1
-                    if row < height:
+                    if row < (height-1):
                         data_list.append(float(row+1) / float(height))
                     else:
                         data_list.append(1.0)
                     break
             if found == 0:
-                data_list.append(float(0))
+                data_list.append(float(0.0))
 
         #print (data_list)
         try:
@@ -116,6 +118,12 @@ class AugmentImages:
         cv2.imwrite("./test.jpg", augmented["image"])
         cv2.imwrite("./test_mask.jpg", augmented["mask"])
 
+    def save_image(self, img, f, data):
+        #Save the image and mask
+        img= img[:, :, ::-1]
+        img = img * 255.0
+        cv2.imwrite("./sample_img/"+f, img)
+
     def _main(self, args):
         ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -128,19 +136,24 @@ class AugmentImages:
         input_width = config_client.getint('model', 'input_width')
         input_height = config_client.getint('model', 'input_height')
 
-        test_file = '../Input_Images/ck5t10h7ip6fh0929bbm4l9fw.jpg'
-        test_mask = '../Image_Masks/ck5t10h7ip6fh0929bbm4l9fw.jpg'
+
+        image_list = os.listdir("../Input_Images/")
+        image_list.sort()
 
         #run one prediction
-        for x in range(10):
-            img,data = self.augment_image(test_file, test_mask)
-            self.write_image(img)
+        for f in image_list:
+            if f.endswith(".jpg"):
+                test_file = '../Input_Images/' + f
+                test_mask = '../Image_Masks/' + f.replace('.','_mask.')
+                print(test_mask)
+                img,data = self.augment_image(test_file, test_mask)
+                self.save_image(img["image"],f,data)
 
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser(description='')
     argparser.add_argument('-c', '--conf', help='path to configuration file')
 
     args = argparser.parse_args()
-    a = Aug()
+    a = AugmentImages(128)
     a._main(args)
 

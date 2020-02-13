@@ -106,7 +106,7 @@ class DataExtractor:
                return ""
             flags += 'f'
 
-      return flags   
+      return flags
 
    '''Remove all the directories and files containing data information'''
    def cleanData(self):
@@ -259,8 +259,8 @@ class DataExtractor:
          newImg.save(dirPath + "/Input_Images/" + imgName)
          newImg.close()
 
-         #Save the mask for the image   
-         #print("Saving mask")      
+         #Save the mask for the image
+         #print("Saving mask")
          newMask = Image.open(orgMask[0])
          newMask = newMask.convert('L')   #Convert the mask to grayscale format
          newMask = newMask.resize((imgWidth, imgHeight))  #Resize the mask to be 640x360
@@ -278,7 +278,7 @@ class DataExtractor:
          #Load the image to draw the extracted mask data on for validation
          validationMaskImage = cv2.imread(dirPath + "/Input_Images/" + imgName)
 
-         '''Write the mask data to a file in x,y column format, where y is normalized between 0 and 1 and 
+         '''Write the mask data to a file in x,y column format, where y is normalized between 0 and 1 and
             draw the extracted mask points over the original image'''
          x = 0;
          stepSize = imgWidth // numOutputs
