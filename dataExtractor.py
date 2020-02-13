@@ -5,7 +5,7 @@ import cv2
 import os
 import sys
 import shutil
-import json
+import ast
 import configparser
 from PIL import Image
 from random import randint
@@ -48,7 +48,6 @@ class DataExtractor:
          #Save the configuration file
          elif f == 'f':
             configFile = args[index+1]
-            print(configFile)
 
       #Not all the required arguments were provided
       if configFile is None or dataFile is None or downloadType is None:
@@ -212,14 +211,17 @@ class DataExtractor:
 
          #Get the review score of the image
          review = row['Reviews']
-         #Get the dictionary representation from the column
-         review = review[1 : len(review) - 1]
-         #Load the review column as a dictionary
-         review = json.loads(str(review))
-         score = review['score']
+         review = ast.literal_eval(review)
+         runningScore = 0
+         numScores = len(review)
+         for i in range(numScores):
+            #Load the current entry as a dictionary
+            entry = ast.literal_eval(str(review[i]))
+            #Add the score of the entry to the running total
+            runningScore += entry['score']
 
          #If the image has a negative score, do not download it
-         if score < 0:
+         if runningScore < 0:
             print('\nImage ' + row['ID'] + " has a negative review score. Skipping image")
             continue
 
@@ -242,7 +244,7 @@ class DataExtractor:
          #Download the mask
          print("Getting Mask")
          #Get the mask url of the image
-         mask = json.loads(row['Masks'])
+         mask = ast.literal_eval(row['Masks'])
          maskUrl = mask['Free space']
          orgMask = self.getImageFromURL(maskUrl) #Retrieve the original mask
 
