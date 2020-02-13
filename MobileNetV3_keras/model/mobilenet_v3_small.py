@@ -38,7 +38,8 @@ class MobileNetV3_Small(MobileNetBase):
         """
         inputs = Input(shape=self.shape)
 
-        x = self._conv_block(inputs, 16, (3, 3), strides=(2, 2), nl='HS')
+        #x = self._conv_block(inputs, 16, (3, 3), strides=(2, 2), nl='HS')
+        x = self._conv_block(inputs, 32, (3, 3), strides=(2, 2), nl='HS')
 
         x = self._bottleneck(x, 16, (3, 3), e=16, s=2, squeeze=True, nl='RE')
         x = self._bottleneck(x, 24, (3, 3), e=72, s=2, squeeze=False, nl='RE')
@@ -46,37 +47,37 @@ class MobileNetV3_Small(MobileNetBase):
         x = self._bottleneck(x, 40, (5, 5), e=96, s=2, squeeze=True, nl='HS')
 
         #x = self._bottleneck(x, 40, (5, 5), e=240, s=1, squeeze=True, nl='HS')
-        x = self._bottleneck(x, 40, (5, 5), e=200, s=1, squeeze=True, nl='HS')
+        x = self._bottleneck(x, 40, (5, 5), e=240, s=1, squeeze=True, nl='HS')
 
         #x = self._bottleneck(x, 40, (5, 5), e=240, s=1, squeeze=True, nl='HS')
-        x = self._bottleneck(x, 40, (5, 5), e=200, s=1, squeeze=True, nl='HS')
+        x = self._bottleneck(x, 40, (5, 5), e=240, s=1, squeeze=True, nl='HS')
 
         x = self._bottleneck(x, 48, (5, 5), e=120, s=1, squeeze=True, nl='HS')
         x = self._bottleneck(x, 48, (5, 5), e=144, s=1, squeeze=True, nl='HS')
 
         #x = self._bottleneck(x, 96, (5, 5), e=288, s=2, squeeze=True, nl='HS')
-        x = self._bottleneck(x, 96, (5, 5), e=200, s=2, squeeze=True, nl='HS')
+        x = self._bottleneck(x, 96, (5, 5), e=240, s=2, squeeze=True, nl='HS')
 
         #x = self._bottleneck(x, 96, (5, 5), e=576, s=1, squeeze=True, nl='HS')
-        x = self._bottleneck(x, 96, (5, 5), e=300, s=1, squeeze=True, nl='HS')
+        x = self._bottleneck(x, 96, (5, 5), e=400, s=1, squeeze=True, nl='HS')
 
         #x = self._bottleneck(x, 96, (5, 5), e=576, s=1, squeeze=True, nl='HS')
-        x = self._bottleneck(x, 96, (5, 5), e=300, s=1, squeeze=True, nl='HS')
+        x = self._bottleneck(x, 96, (5, 5), e=400, s=1, squeeze=True, nl='HS')
 
         #x = self._conv_block(x, 576, (1, 1), strides=(1, 1), nl='HS')
-        x = self._conv_block(x, 400, (1, 1), strides=(1, 1), nl='HS')
+        x = self._conv_block(x, 500, (1, 1), strides=(1, 1), nl='HS')
 
         #x = Dropout(0.3, name='Dropout')(x)
 
 
         x = GlobalAveragePooling2D()(x)
         #x = Reshape((1, 1, 576))(x)
-        x = Reshape((1, 1, 400))(x)
+        x = Reshape((1, 1, 500))(x)
 
         x = Dropout(0.3, name='Dropout')(x)
 
         #x = Conv2D(1280, (1, 1), padding='same')(x)
-        x = Conv2D(500, (1, 1), padding='same')(x)
+        x = Conv2D(1100, (1, 1), padding='same')(x)
 
         x = Dropout(0.3, name='Dropout1')(x)
 
@@ -84,8 +85,8 @@ class MobileNetV3_Small(MobileNetBase):
 
         if self.include_top:
             #testing
-            x = Dense(300, activation='relu')(x)
-            x = Dense(300, activation='relu')(x)
+            #x = Dense(300, activation='relu')(x)
+            #x = Dense(600, activation='relu')(x)
             x = Dense(self.num_outputs, activation='linear')(x)
             # x = Flatten()(x)
 

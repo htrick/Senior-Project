@@ -7,7 +7,7 @@ import numpy as np
 from keras.models import load_model
 from src.generator import DataGenerator
 from src.MobileNet_V3 import build_mobilenet_v3
-from keras.optimizers import Adam
+from keras.optimizers import (Adam, RMSprop)
 from keras.callbacks import (ModelCheckpoint,
                              LearningRateScheduler,
                              ReduceLROnPlateau,
@@ -54,13 +54,17 @@ def _main(args):
     #model_test = MobileNetv2((input_height,input_width,3), num_outputs)
     # ** initalize model
 
+    rmsprop = RMSprop(lr=0.001, rho=0.9)
     #model.compile(optimizer=Adam(lr=3e-3), loss='mean_absolute_error', metrics=['accuracy'])
     #model.compile(optimizer=Adam(), loss='mean_absolute_error', metrics=['accuracy'])
-    model_test.compile(optimizer=Adam(), loss='mean_absolute_error', metrics=['accuracy'])
+
+    #model_test.compile(optimizer=Adam(), loss='mean_absolute_error', metrics=['accuracy'])
+    model_test.compile(optimizer=rmsprop, loss='mean_absolute_error', metrics=['accuracy'])
 
     # ** setup keras callback
     #filename = 'ep{epoch:03d}-loss{loss:.3f}.h5'
-    filename = 'ep-loss.h5'
+    myhost = os.uname()[1]
+    filename = str(myhost.split('.')[0]) + '_ep-loss.h5'
     weights_directory = os.path.join(ROOT_DIR, 'weights')
 
     if not os.path.exists(weights_directory):
@@ -79,12 +83,12 @@ def _main(args):
     model_test.fit_generator(
                         generator       = train_generator,
                         validation_data = valid_generator,
-                        steps_per_epoch = 400,
-                        validation_steps =100,
+                        steps_per_epoch = 500,
+                        validation_steps =200,
                         epochs          = epochs,
                         callbacks       = [checkpoint],
                         use_multiprocessing=True,
-                        workers=6
+                        workers=4
                         )
 
     model_test.save(os.path.join(ROOT_DIR, save_path))

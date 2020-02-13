@@ -106,7 +106,7 @@ class DataExtractor:
                return ""
             flags += 'f'
 
-      return flags   
+      return flags
 
    '''Remove all the directories and files containing data information'''
    def cleanData(self):
@@ -303,7 +303,7 @@ class DataExtractor:
          #Load the image to draw the extracted mask data on for validation
          validationMaskImage = cv2.imread(dirPath + "/Input_Images/" + imgName)
 
-         '''Write the mask data to a file in x,y column format, where y is normalized between 0 and 1 and 
+         '''Write the mask data to a file in x,y column format, where y is normalized between 0 and 1 and
             draw the extracted mask points over the original image'''
          x = 0;
          stepSize = imgWidth // numOutputs
