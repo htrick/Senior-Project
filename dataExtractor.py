@@ -7,6 +7,7 @@ import sys
 import shutil
 import ast
 import configparser
+import numpy as np
 from PIL import Image
 from random import randint
 
@@ -220,9 +221,9 @@ class DataExtractor:
             #Add the score of the entry to the running total
             runningScore += entry['score']
 
-         #If the image has a negative score, do not download it
+         #If the image has a non-positive score, do not download it
          if runningScore <= 0:
-            print('\nImage ' + row['ID'] + " has a negative review score. Skipping image")
+            print('\nImage ' + row['ID'] + " has a non-positive score. Skipping image")
             continue
 
          '''Check if current image is already downloaded and only new images
@@ -235,38 +236,58 @@ class DataExtractor:
          print(" Getting Original, ", end = '')
          imgUrl = row['Labeled Data']
          orgImg = self.getImageFromURL(imgUrl) #Retrieve the original image
+         newImg = Image.open(orgImg[0])
+         newImg = newImg.convert("RGB")   #Convert the image to RGB format
+         origWidth, origHeight = newImg.size
 
          #Failed to download the image
          if (orgImg == None):
             print("Downloading the original image " + str(imgNum) + " failed")
             continue
 
-         #Download the mask
-         print("Getting Mask")
-         #Get the mask url of the image
-         mask = ast.literal_eval(row['Masks'])
-         maskUrl = mask['Free space']
-         orgMask = self.getImageFromURL(maskUrl) #Retrieve the original mask
-
-         #Failed to download the mask
-         if (orgMask == None):
-            print("Downloading the mask " + str(imgNum) + "  failed")
-            continue
-
          #Save the original image
          #print("Saving original image")
-         newImg = Image.open(orgImg[0])
-         newImg = newImg.convert("RGB")   #Convert the image to RGB format
          newImg = newImg.resize((imgWidth, imgHeight))  #Resize the image to be 640x360
          newImg.save(dirPath + "/Input_Images/" + imgName)
          newImg.close()
 
-         #Save the mask for the image   
-         #print("Saving mask")      
-         newMask = Image.open(orgMask[0])
-         newMask = newMask.convert('L')   #Convert the mask to grayscale format
-         newMask = newMask.resize((imgWidth, imgHeight))  #Resize the mask to be 640x360
-         newMask.save(dirPath + "/Image_Masks/" + row['ID'] + "_mask.jpg")
+         print("Generating Mask")
+         #Create a blank image to draw the mask on
+         orgMask = np.zeros([origHeight, origWidth, 3], dtype=np.uint8)
+
+         #Get the mask labels
+         freeSpace = row['Label']
+         freeSpace = ast.literal_eval(freeSpace)
+         freeSpace = freeSpace['Free space']
+
+         #Get each polygon in the mask
+         polygons = []
+         numPolygons = len(freeSpace)
+         for i in range(numPolygons):
+            #Get the dictionary storing the points for the current polygon
+            geometry = ast.literal_eval(str(freeSpace[i]))
+            geometry = geometry['geometry']
+            numPoints = len(geometry)
+
+            #Form an array of points for the current polygon
+            points = []
+            for p in range(numPoints):
+               point = ast.literal_eval(str(geometry[p]))
+               x = point['x']
+               y = point['y']
+               points.append((x, y))
+
+            #Change the points array to a numpy array
+            points = np.array(points)
+            polygons.append(points)
+
+         #Draw the mask and save it
+         orgMask = cv2.fillPoly(orgMask, polygons, (255, 255, 255), lineType=8)
+         newMask = cv2.resize(orgMask, (imgWidth, imgHeight))
+         cv2.imwrite(dirPath + "/Image_Masks/" + row['ID'] + "_mask.jpg", newMask)
+
+         #Open the mask using PIL
+         newMask = Image.open(dirPath + "/Image_Masks/" + row['ID'] + "_mask.jpg").convert('L')
 
          maskDataFile = open(dirPath + "/Mask_Data/" + row['ID'] + "_mask_data.txt", 'w')
          #Get the pixel array and witdh/height of the original image
