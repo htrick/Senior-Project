@@ -284,10 +284,12 @@ class DataExtractor:
          #Draw the mask and save it
          orgMask = cv2.fillPoly(orgMask, polygons, (255, 255, 255), lineType=cv2.LINE_AA)
          newMask = cv2.resize(orgMask, (imgWidth, imgHeight))
-         cv2.imwrite(dirPath + "/Image_Masks/" + row['ID'] + "_mask.jpg", newMask)
+         #cv2.imwrite(dirPath + "/Image_Masks/" + row['ID'] + "_mask.jpg", newMask)
+         cv2.imwrite(dirPath + "/Image_Masks/" + row['ID'] + "_mask.png", newMask)
 
          #Open the mask using PIL
-         newMask = Image.open(dirPath + "/Image_Masks/" + row['ID'] + "_mask.jpg").convert('L')
+         #newMask = Image.open(dirPath + "/Image_Masks/" + row['ID'] + "_mask.jpg").convert('L')
+         newMask = Image.open(dirPath + "/Image_Masks/" + row['ID'] + "_mask.png").convert('L')
 
          maskDataFile = open(dirPath + "/Mask_Data/" + row['ID'] + "_mask_data.txt", 'w')
          #Get the pixel array and witdh/height of the original image
@@ -322,12 +324,16 @@ class DataExtractor:
          #print("Validating mask")
          inValid = self.checkForBlackEdges(pixels, width, height)
          if not inValid:
-            newMask.save(dirPath + "/Whitelist_Masks/" + row['ID'] + "_mask.jpg")
-            whiteList.write(row['ID'] + '.jpg\n')
+            #newMask.save(dirPath + "/Whitelist_Masks/" + row['ID'] + "_mask.jpg")
+            #whiteList.write(row['ID'] + '.jpg\n')
+            newMask.save(dirPath + "/Whitelist_Masks/" + row['ID'] + "_mask.png")
+            whiteList.write(row['ID'] + '.png\n')
          else:
-            newMask.save(dirPath + "/Blacklist_Masks/" + row['ID'] + "_mask.jpg")
+            #newMask.save(dirPath + "/Blacklist_Masks/" + row['ID'] + "_mask.jpg")
+            newMask.save(dirPath + "/Blacklist_Masks/" + row['ID'] + "_mask.png")
             print("Potential labeling error for image: " + row['ID'])
-            blackList.write(row['ID'] + '.jpg\n')
+            #blackList.write(row['ID'] + '.jpg\n')
+            blackList.write(row['ID'] + '.png\n')
 
          maskDataFile.close()
          newMask.close()
