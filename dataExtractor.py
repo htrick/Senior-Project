@@ -232,7 +232,7 @@ class DataExtractor:
             print(" Skipping Image")
             continue
 
-         #Get the original image and mask
+         #Get the original image
          print(" Getting Original, ", end = '')
          imgUrl = row['Labeled Data']
          orgImg = self.getImageFromURL(imgUrl) #Retrieve the original image
@@ -282,7 +282,7 @@ class DataExtractor:
             polygons.append(points)
 
          #Draw the mask and save it
-         orgMask = cv2.fillPoly(orgMask, polygons, (255, 255, 255), lineType=8)
+         orgMask = cv2.fillPoly(orgMask, polygons, (255, 255, 255), lineType=cv2.LINE_AA)
          newMask = cv2.resize(orgMask, (imgWidth, imgHeight))
          cv2.imwrite(dirPath + "/Image_Masks/" + row['ID'] + "_mask.jpg", newMask)
 
