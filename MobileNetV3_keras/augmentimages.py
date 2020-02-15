@@ -13,12 +13,14 @@ from albumentations import (
     IAAPerspective, IAASharpen, IAAEmboss, RandomBrightnessContrast, Flip, OneOf, Compose
 )
 from PIL import Image
+from keras.applications.mobilenet_v2 import preprocess_input
 
 class AugmentImages:
-    def __init__(self, num_outputs):
+    def __init__(self, num_outputs, p):
         self.num_outputs = num_outputs
         self.alpha = 0
         self.counter = 0
+        self.p = p
 
     def augmentation_pipeline(self, p=0.5):
         return Compose([
@@ -54,7 +56,7 @@ class AugmentImages:
         img_copy = img_copy[:, :, ::-1]
 
         #run the augmentation
-        augmentation = self.augmentation_pipeline(p=0.5)
+        augmentation = self.augmentation_pipeline(self.p)
         data = {"image": img_copy, "mask": img_mask}
         augmented = augmentation(**data)
 
@@ -109,6 +111,7 @@ class AugmentImages:
 
         #normalize the image data
         i = augmented["image"]
+        #augmented["image"] = preprocess_input(i.astype(float))
         augmented["image"] = i / 255.0
 
         return augmented, data_list
@@ -154,6 +157,6 @@ if __name__ == '__main__':
     argparser.add_argument('-c', '--conf', help='path to configuration file')
 
     args = argparser.parse_args()
-    a = AugmentImages(128)
+    a = AugmentImages(128,.5)
     a._main(args)
 

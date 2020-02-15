@@ -16,6 +16,8 @@ from keras.callbacks import (ModelCheckpoint,
 from model.mobilenet_v3_small import MobileNetV3_Small
 #from model.mobilenet_v2 import MobileNetv2
 
+from model.mobilenetv2_pretrained import MobileNetV2_Pretrained
+
 logging.basicConfig(level=logging.INFO)
 
 def _main(args):
@@ -47,11 +49,17 @@ def _main(args):
     valid_directory = config_client.get('data', 'valid')
 
     # ** initialize data generators
-    train_generator = DataGenerator(dir_path=train_directory, batch_size=batch_size, aug_freq=0.5, image_width=640, image_height=360, n=num_outputs)
-    valid_generator = DataGenerator(dir_path=valid_directory, batch_size=batch_size, aug_freq=0.5, image_width=640, image_height=360, n=num_outputs)
+    train_generator = DataGenerator(dir_path=train_directory, batch_size=batch_size, aug_freq=0.5, image_width=input_width, image_height=input_height, n=num_outputs)
+    valid_generator = DataGenerator(dir_path=valid_directory, batch_size=batch_size, aug_freq=0.0, image_width=input_width, image_height=input_height, n=num_outputs)
 
-    model_test = MobileNetV3_Small((input_height,input_width,3), num_outputs).build()
+    #model_test = MobileNetV3_Small((input_height,input_width,3), num_outputs).build()
+
     #model_test = MobileNetv2((input_height,input_width,3), num_outputs)
+
+    #pretrained model test
+    model_test = MobileNetV2_Pretrained(shape = (input_width,input_height,3), num_outputs=num_outputs)
+    model_test = model_test.build()
+
     # ** initalize model
 
     rmsprop = RMSprop(lr=0.001, rho=0.9)
