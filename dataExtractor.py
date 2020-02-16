@@ -18,10 +18,11 @@ class DataExtractor:
       args = sys.argv
 
       flags = self.parseCommandLine(numArgs, args);
-      if flags == "":
+      #No flags were given
+      if flags == []:
          return
 
-      if flags == 'c':
+      if '-clean' in flags:
          self.cleanData()
          return
 
@@ -31,15 +32,15 @@ class DataExtractor:
       downloadType = None
 
       for f in flags:
-         index = args.index('-'+f)
+         index = args.index(f)
 
          #Save the file to download the images from
-         if f == 'n' or f == 'a':
+         if f == '-n' or f == '-a':
             dataFile = args[index+1]
             downloadType = f
 
          #Save the percentage to use for validation
-         elif f == 'p':
+         elif f == '-p':
             try:
                validPercent = float(args[index+1])
             except:
@@ -47,13 +48,13 @@ class DataExtractor:
                return
 
          #Save the configuration file
-         elif f == 'f':
+         elif f == '-c':
             configFile = args[index+1]
 
       #Not all the required arguments were provided
       if configFile is None or dataFile is None or downloadType is None:
-         print("Usage: python3 dataExtractor.py -c | -a <filename.csv> -f <filename> [-p <0-1>] |" +\
-               "-n <filename.csv> -f <filename> [-p <0-1>]")
+         print("Usage: python3 dataExtractor.py -clean | -a <filename.csv> -c <filename> [-p <0-1>] |" +\
+               "-n <filename.csv> -c <filename> [-p <0-1>]")
          return
 
       #Download the images and their associated data
@@ -67,44 +68,44 @@ class DataExtractor:
 
    '''Parse the command line to find what flags were given'''
    def parseCommandLine(self, numArgs, args):
-      flags = ""
+      flags = []
 
       for i in range(numArgs):
-         if args[i] == '-c':
+         if args[i] == '-clean':
             if numArgs != 2:
-               print("Usage: python3 dataExtractor.py -c | -a <filename.csv> -f <filename> [-p <0-1>] |" +\
-                     "-n <filename.csv> -f <filename> [-p <0-1>]")
-               return ""
-            flags += 'c'
+               print("Usage: python3 dataExtractor.py -clean | -a <filename.csv> -c <filename> [-p <0-1>] |" +\
+                     "-n <filename.csv> -c <filename> [-p <0-1>]")
+               return []
+            flags.append(args[i])
             return flags
 
          if args[i] == '-n':
-            if 'a' in flags or 'n' in flags:
-               print("Usage: python3 dataExtractor.py -c | -a <filename.csv> -f <filename> [-p <0-1>] |" +\
-                     "-n <filename.csv> -f <filename> [-p <0-1>]")
-               return ""
-            flags += 'n'
+            if '-a' in flags or '-n' in flags:
+               print("Usage: python3 dataExtractor.py -clean | -a <filename.csv> -c <filename> [-p <0-1>] |" +\
+                     "-n <filename.csv> -c <filename> [-p <0-1>]")
+               return []
+            flags.append(args[i])
 
          if args[i] == '-a':
-            if 'n' in flags or 'a' in flags:
-               print("Usage: python3 dataExtractor.py -c | -a <filename.csv> -f <filename> [-p <0-1>] |" +\
-                     "-n <filename.csv> -f <filename> [-p <0-1>]")
-               return ""
-            flags += 'a'
+            if '-a' in flags or '-n' in flags:
+               print("Usage: python3 dataExtractor.py -clean | -a <filename.csv> -c <filename> [-p <0-1>] |" +\
+                     "-n <filename.csv> -c <filename> [-p <0-1>]")
+               return []
+            flags.append(args[i])
 
          if args[i] == '-p':
-            if 'p' in flags:
-               print("Usage: python3 dataExtractor.py -c | -a <filename.csv> -f <filename> [-p <0-1>] |" +\
-                     "-n <filename.csv> -f <filename> [-p <0-1>]")
-               return ""
-            flags += 'p'
+            if '-p' in flags:
+               print("Usage: python3 dataExtractor.py -clean | -a <filename.csv> -c <filename> [-p <0-1>] |" +\
+                     "-n <filename.csv> -c <filename> [-p <0-1>]")
+               return []
+            flags.append(args[i])
 
-         if args[i] == '-f':
-            if 'f' in flags:
-               print("Usage: python3 dataExtractor.py -c | -a <filename.csv> -f <filename> [-p <0-1>] |" +\
-                     "-n <filename.csv> -f <filename> [-p <0-1>]")
-               return ""
-            flags += 'f'
+         if args[i] == '-c':
+            if '-c' in flags:
+               print("Usage: python3 dataExtractor.py -clean | -a <filename.csv> -c <filename> [-p <0-1>] |" +\
+                     "-n <filename.csv> -c <filename> [-p <0-1>]")
+               return []
+            flags.append(args[i])
 
       return flags   
 
@@ -167,10 +168,10 @@ class DataExtractor:
 
       reader = csv.DictReader(imageFile)
       try:
-         if (flag == 'a'):
+         if (flag == '-a'):
             whiteList = open("Whitelisted_Images.txt", 'w')
             blackList = open("Blacklisted_Images.txt", 'w')
-         elif (flag == 'n'):
+         elif (flag == '-n'):
             whiteList = open("Whitelisted_Images.txt", 'a')
             blackList = open("Blacklisted_Images.txt", 'a')
          else:
@@ -228,7 +229,7 @@ class DataExtractor:
 
          '''Check if current image is already downloaded and only new images
             need to be download. If it exists, continue to the next image'''
-         if (flag == 'n' and os.path.isfile(dirPath + "/Input_Images/" + imgName)):
+         if (flag == '-n' and os.path.isfile(dirPath + "/Input_Images/" + imgName)):
             print(" Skipping Image")
             continue
 
@@ -284,11 +285,9 @@ class DataExtractor:
          #Draw the mask and save it
          orgMask = cv2.fillPoly(orgMask, polygons, (255, 255, 255), lineType=cv2.LINE_AA)
          newMask = cv2.resize(orgMask, (imgWidth, imgHeight))
-         #cv2.imwrite(dirPath + "/Image_Masks/" + row['ID'] + "_mask.jpg", newMask)
          cv2.imwrite(dirPath + "/Image_Masks/" + row['ID'] + "_mask.png", newMask)
 
          #Open the mask using PIL
-         #newMask = Image.open(dirPath + "/Image_Masks/" + row['ID'] + "_mask.jpg").convert('L')
          newMask = Image.open(dirPath + "/Image_Masks/" + row['ID'] + "_mask.png").convert('L')
 
          maskDataFile = open(dirPath + "/Mask_Data/" + row['ID'] + "_mask_data.txt", 'w')
@@ -324,15 +323,11 @@ class DataExtractor:
          #print("Validating mask")
          inValid = self.checkForBlackEdges(pixels, width, height)
          if not inValid:
-            #newMask.save(dirPath + "/Whitelist_Masks/" + row['ID'] + "_mask.jpg")
-            #whiteList.write(row['ID'] + '.jpg\n')
             newMask.save(dirPath + "/Whitelist_Masks/" + row['ID'] + "_mask.png")
             whiteList.write(row['ID'] + '.png\n')
          else:
-            #newMask.save(dirPath + "/Blacklist_Masks/" + row['ID'] + "_mask.jpg")
             newMask.save(dirPath + "/Blacklist_Masks/" + row['ID'] + "_mask.png")
             print("Potential labeling error for image: " + row['ID'])
-            #blackList.write(row['ID'] + '.jpg\n')
             blackList.write(row['ID'] + '.png\n')
 
          maskDataFile.close()
