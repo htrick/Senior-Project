@@ -9,37 +9,71 @@ import sys
 import os
 import cv2
 import configparser
+import math
 
+import matplotlib.pyplot as plt
+
+'''Parse the command line to find what flags were given'''
+def parseCommandLine(numArgs, args):
+   flags = []
+
+   for i in range(numArgs):
+      if args[i] == '-c':
+         if '-c' in flags:
+            print("Usage: python3 inference.py -c <config_file> [-w <weights>] | [-r]")
+            return []
+         flags.append(args[i])
+
+      if args[i] == '-w':
+         if '-w' in flags:
+            print("Usage: python3 inference.py -c <config_file> [-w <weights>] | [-r]")
+            return []
+         flags.append(args[i])
+
+      if args[i] == '-r':
+         if '-r' in flags:
+            print("Usage: python3 inference.py -c <config_file> [-w <weights>] | [-r]")
+            return []
+         flags.append(args[i])
+
+   return flags
 
 '''Run through the images in the given directory in the config file and determine the
    predictions of the model, save the original image with the prediction overlayed'''
 def main():
-   numArgs = len(sys.argv)
    config_file = None
    weight_path = None
-
+   numArgs = len(sys.argv)
    args = sys.argv
-   if (numArgs == 3):
-      if (args[1] == '-c'):
-         config_file = args[2]
-      else:
-         print("Usage: python3 inference.py [-c <config_file>] [<weights>]")
-         return
-   elif (numArgs == 5):
-      if (args[1] == '-c'):
-         config_file = args[2]
-      else:
-         print("Usage: python3 inference.py [-c <config_file>] [-w <weights>]")
-         return
-      if (args[3] == '-w'):
-         weight_path = args[4]
-      else:
-         print("Usage: python3 inference.py [-c <config_file>] [-w <weights>]")
-         return
-   else:
-      print("Usage: python3 inference.py [-c <config_file>] [-w <weights>]")
+   rank = False
+
+   flags = parseCommandLine(numArgs, args);
+
+   for f in flags:
+      index = args.index(f)
+
+      #Save the configuration file
+      if f == '-c':
+         config_file = args[index+1]
+
+      elif f == '-w':
+         weight_path = args[index+1]
+
+      elif f == '-r':
+         rank = True
+
+   #Config file flag was not specified
+   if config_file is None:
+      print("Usage: python3 inference.py -c <config_file> [-w <weights>] | [-r]")
       return
 
+   if rank:
+      print("Ranking Images")
+      #Rank the unlabeled images
+      rankImages(config_file)
+      return
+
+   #Make inferences on the images in the image_dir
    ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 
    # ** get configuration
@@ -111,6 +145,137 @@ def main():
       n += 1
 
    return
+
+def rankImages(config_file):
+   #Make inferences on the images in the image_dir
+   ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+
+   #Open the file to store the names of the images with the largest error
+   try:
+      worst_file = open(os.path.join(ROOT_DIR, 'Rankings'), 'w')
+   except OSError as err:
+      print("Error: {0}".format(err))
+      return
+
+   # ** get configuration
+   config_client = configparser.ConfigParser()
+   config_client.read(config_file)
+
+   # ** set gpu
+   os.environ['CUDA_VISIBLE_DEVICES'] = config_client.get('gpu', 'gpu')
+
+   # ** Images
+   image_dir = config_client.get('rank', 'image_path')
+   if not os.path.exists(image_dir):
+      raise 'input dir does not exist'
+
+   # ** Input Sizes
+   input_width = config_client.getint('model', 'input_width')
+   input_height = config_client.getint('model', 'input_height')
+
+   # ** Number of outputs
+   num_outputs = config_client.getint('model', 'num_outputs')
+
+   # ** Prefix for weight files
+   weight_path_prefix = config_client.get('rank', 'weight_path_prefix')
+
+   # ** Ranking percentage
+   rank_percent = config_client.getfloat('rank', 'rank_percent')
+
+   #Load the 4 models
+   print("Loading model 1")
+   model_1 = load_model(os.path.join(ROOT_DIR, weight_path_prefix + '_h1'),
+                               custom_objects={'_hard_swish':_hard_swish,
+                                               '_relu6':_relu6})
+   print("Loading model 2")
+   model_2 = load_model(os.path.join(ROOT_DIR, weight_path_prefix + '_h2'),
+                               custom_objects={'_hard_swish':_hard_swish,
+                                               '_relu6':_relu6})
+   print("Loading model 3")
+   model_3 = load_model(os.path.join(ROOT_DIR, weight_path_prefix + '_h3'),
+                               custom_objects={'_hard_swish':_hard_swish,
+                                               '_relu6':_relu6})
+   print("Loading model 4")
+   model_4 = load_model(os.path.join(ROOT_DIR, weight_path_prefix + '_h4'),
+                               custom_objects={'_hard_swish':_hard_swish,
+                                               '_relu6':_relu6})
+
+   #Run through the images and rank them
+   n = 0
+   errors = []
+   #Determine the sum of squared differences for each image
+   for _id in os.listdir(image_dir):
+      #Get the image
+      _id_path = os.path.join(image_dir, _id)
+
+      #Normalize the input image
+      X = np.empty((1, input_height, input_width, 3), dtype='float32')
+      X[0, :, :, :] = image_augmentation(cv2.imread(_id_path))
+
+      #Predict the free space for the 4 models
+      print("Ranking Image: " + str(n))
+      prediction_1 = model_1.predict(X)[0]
+      prediction_2 = model_2.predict(X)[0]
+      prediction_3 = model_3.predict(X)[0]
+      prediction_4 = model_4.predict(X)[0]
+
+      #Get the average prediction of the 4 models
+      avg_prediction = []
+      for i in range(num_outputs):
+         avg = prediction_1[i] + prediction_2[i] + prediction_3[i] + prediction_4[i]
+         avg = avg / 4
+         avg_prediction.append(avg)
+
+      #Get the squared error for each model
+      sqrd_error_1 = []
+      sqrd_error_2 = []
+      sqrd_error_3 = []
+      sqrd_error_4 = []
+      for i in range(num_outputs):
+         sqrd_error_1.append((prediction_1[i] - avg_prediction[i])**2)
+         sqrd_error_2.append((prediction_2[i] - avg_prediction[i])**2)
+         sqrd_error_3.append((prediction_3[i] - avg_prediction[i])**2)
+         sqrd_error_4.append((prediction_4[i] - avg_prediction[i])**2)
+
+      #Sum the squared errors for each model
+      error_sum_1 = sum(sqrd_error_1)
+      error_sum_2 = sum(sqrd_error_2)
+      error_sum_3 = sum(sqrd_error_3)
+      error_sum_4 = sum(sqrd_error_4)
+
+      #Sum all the errors
+      error_total = error_sum_1 + error_sum_2 + error_sum_3 + error_sum_4
+
+      errors.append((_id, error_total))
+      n += 1
+
+   #Rank the errors in descending order
+   rankings = sorted(errors, key = lambda x: x[1], reverse = True)
+
+   '''ranks = []
+            for i in range(len(rankings)-1, -1, -1):
+               ranks.append(rankings[i][1])
+         
+            #Plot the errors
+            plt.plot(ranks)
+            plt.ylabel("Errors")
+            plt.xlabel("Image")
+            plt.show()'''
+
+   #Find the average error of the worst 10%
+   num_worst = int(n * 0.1)
+   avg_error = 0
+   for i in range(num_worst):
+      avg_error += rankings[i][1]
+   avg_error = avg_error / num_worst
+   print(avg_error)
+
+   #Save the worst rank_percent of the images
+   num_worst = int(n * rank_percent)
+   for i in range(num_worst):
+      worst_file.write(rankings[i][0] + '\n')
+   return
+
 
 #Turn the image to RGB and normalize it
 def image_augmentation(img):

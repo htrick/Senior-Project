@@ -5,6 +5,7 @@
 python3
 PIL >= 7.0.0
 opencv-python >= 4.1.2
+numpy >= 1.17.2
 ```
 
 ## dataExtractor.py
@@ -22,14 +23,15 @@ opencv-python >= 4.1.2
 * -c: A flag argument to specify the config file to use to determine the height and width of the images to save, and the number of points to extract from the image masks
 
 ## inference.py
-**Functionality**: Using the provided config file, make a prediction of the num_outputs points representing the free space in each image in the directory in the config file. Then overlay the num_outputs points onto the original image and save it.
+**Functionality**: Using the provided config file, make a prediction of the num_outputs points representing the free space in each image in the directory in the config file. Then overlay the num_outputs points onto the original image and save it. If the -r flag is specified, rank the images on how close the 4 models predict the free space boundary.
 ```
-Usage: python3 inference.py -c <config_file> [-w <weights>]
+Usage: python3 inference.py -c <config_file> [-w <weights>] | [-r]
 ```
 
 ## Comand Line Arguments
 * -c: A flag argument to specify the next argument given is the config file to use.
 * -w: An optional flag argument to specify a different weights file to use over the file present in the config file
+* -r: An optional flag argument to instead rank images based on their performance in the 4 models used from the weight files.
 
 ## Config File
 
@@ -51,6 +53,13 @@ Argument|Description|Type|Default
 weight_path|Saved weights of MobileNet V3 model.|str|weights/2_5_ep200-loss0.014_1.h5
 image_path|Path to the images to make predictions for with the MobileNet V3 model.|str|../Input_Images
 inference_dir|Path to save the model predictions|str|Model_Predictions
+
+### **rank**
+Argument|Description|Type|Default
+---|---|---|---
+image_path|Path to the images to rank.|str|../Input_Images
+weight_path_prefix|Prefix of the paths to the weight files to use. Weight Files are expected to end in _h1-4.|str|None
+rank_percent|The percentage of the worst ranking images to save|float|0.2
 
 ## Directories
 The images and their mask data gathered from the dataExtractor.py script are stored in the following directories and .txt files. All directories and files are stored relative the path where the dataExtractor.py script was called from.
