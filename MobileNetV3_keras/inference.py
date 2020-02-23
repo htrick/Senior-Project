@@ -9,7 +9,8 @@ import sys
 import os
 import cv2
 import configparser
-import math
+from math import sqrt, atan, pi
+from random import randint
 
 import matplotlib.pyplot as plt
 
@@ -20,19 +21,25 @@ def parseCommandLine(numArgs, args):
    for i in range(numArgs):
       if args[i] == '-c':
          if '-c' in flags:
-            print("Usage: python3 inference.py -c <config_file> [-w <weights>] | [-r]")
+            print("Usage: python3 inference.py -c <config_file> [-n <int>] [-w <weights>] | [-r]")
             return []
          flags.append(args[i])
 
       if args[i] == '-w':
          if '-w' in flags:
-            print("Usage: python3 inference.py -c <config_file> [-w <weights>] | [-r]")
+            print("Usage: python3 inference.py -c <config_file> [-n <int>] [-w <weights>] | [-r]")
             return []
          flags.append(args[i])
 
       if args[i] == '-r':
          if '-r' in flags:
-            print("Usage: python3 inference.py -c <config_file> [-w <weights>] | [-r]")
+            print("Usage: python3 inference.py -c <config_file> [-n <int>] [-w <weights>] | [-r]")
+            return []
+         flags.append(args[i])
+
+      if args[i] == '-n':
+         if '-n' in flags:
+            print("Usage: python3 inference.py -c <config_file> [-n <int>] [-w <weights>] | [-r]")
             return []
          flags.append(args[i])
 
@@ -46,6 +53,7 @@ def main():
    numArgs = len(sys.argv)
    args = sys.argv
    rank = False
+   numInfer = None
 
    flags = parseCommandLine(numArgs, args);
 
@@ -56,23 +64,42 @@ def main():
       if f == '-c':
          config_file = args[index+1]
 
+      #USe the given weights file instead of the one in the config file
       elif f == '-w':
          weight_path = args[index+1]
 
+      #Rank the images
       elif f == '-r':
          rank = True
 
+      #Predict only the given portion of the images
+      elif f == '-n':
+         try:
+            numInfer = int(args[index+1])
+         except:
+               print("Usage: python3 inference.py -c <config_file> [-n <int>] [-w <weights>] | [-r]")
+               return
+
    #Config file flag was not specified
    if config_file is None:
-      print("Usage: python3 inference.py -c <config_file> [-w <weights>] | [-r]")
+      print("Usage: python3 inference.py -c <config_file> [-n <int>] [-w <weights>] | [-r]")
       return
 
+   #Rank the unlabeled images
    if rank:
-      print("Ranking Images")
-      #Rank the unlabeled images
+      print("Rank Images")
       rankImages(config_file)
-      return
 
+   #Predict the free space in the images
+   else:
+      print("Predict Images")
+      predictImages(config_file, weight_path, numInfer)
+
+   return
+
+'''Make predictions about the free space for the given images using the model in the 
+   config file or given weight_path'''
+def predictImages(config_file, weight_path, numInfer):
    #Make inferences on the images in the image_dir
    ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -132,20 +159,112 @@ def main():
       #Load the image to draw the extracted mask data on for validation
       validationMaskImage = cv2.imread(_id_path)
 
-      #Draw circles on the original image to show where the predicted free space occurs
+      #Info regarding the robot's position in the image
+      robotWidth = 50 #Represented in pixels
+      robotCenter = ((input_width-1)//2, input_height-1)
+      robotLeft = robotCenter[0] - robotWidth
+      robotRight = robotCenter[0] + robotWidth
+      robotFront = robotCenter[1] - 30 #Front of the robot
+      robotCloseUp = robotCenter[1] - 15 #The very front of the robot
+
+      highestPoint = robotCenter
+      leftMax = robotCenter[1]
+      rightMax = robotCenter[1]
+      blocked = False
+      #close = False
       x = 0
       for i in range(len(prediction)):
          y = int(round(prediction[i] * input_height))
+
+         #Find the furthest point away from the bottom of the image
+         if y < highestPoint[1]:
+            highestPoint = (x, y)
+
+         #Get the furthest point away from the bottom to the left and right of 
+         #the robot in case there's an obtacle
+         if x < robotLeft and y < leftMax:
+               leftMax = y
+         elif x > robotRight and y < rightMax:
+            rightMax = y
+
+         #Determine if something is near the front of the robot
+         if x in range(robotLeft, robotRight+1) and y >= robotFront:
+            blocked = True
+            #if y >= robotCloseUp:
+            #   close = True
+
+         #Draw circles on the original image to show where the predicted free space occurs
          validationMaskImage = cv2.circle(validationMaskImage, (x, y), 1, (0, 255, 0), -1)
          x += stepSize
+
+      #Draw a line across the image where the furthest point from the center is
+      cv2.line(validationMaskImage, (0, highestPoint[1]), (input_width-1, highestPoint[1]), (0, 0, 255), 2)
+
+      #Draw lines representing the sides of the robot
+      cv2.line(validationMaskImage, (robotCenter[0]-robotWidth, robotCenter[1]), 
+               (robotCenter[0]-robotWidth, robotFront), (0, 0, 255), 2)
+      cv2.line(validationMaskImage, (robotCenter[0]+robotWidth, robotCenter[1]), 
+               (robotCenter[0]+robotWidth, robotFront), (0, 0, 255), 2)
+
+      #Draw a line representing the boundary of the front of the robot
+      cv2.line(validationMaskImage, (robotLeft, robotFront), (robotRight, robotFront), (0, 0, 255), 2)
+
+      mag = 0
+      theta = 0
+      if not blocked:
+         #Draw an arrow connecting the center to the furthest point
+         cv2.arrowedLine(validationMaskImage, robotCenter, highestPoint, (0, 0, 255), 2)
+
+         #Calculate magnitude and direction of vector
+         #mag = distance(robotCenter, highestPoint)
+         diff_x = robotCenter[0] - highestPoint[0]
+         diff_y = robotCenter[1] - highestPoint[1]
+         theta = atan(diff_x / diff_y)
+
+      else:
+         #Obstruction is right in front of the robot, backup
+         #if close:
+         #   cv2.arrowedLine(validationMaskImage, (robotCenter[0], robotFront), robotCenter, (0, 0, 255), 2, tipLength=0.4)
+         #   mag = distance(robotCenter, (robotCenter[0], robotFront))
+         #  theta = 0
+
+         #Turn away from the obstruction
+         #else:
+         #Choose a direction to turn (left or right)
+         #Turn Left, it's more clear than the right
+         if leftMax < rightMax:
+            cv2.arrowedLine(validationMaskImage, (robotCenter[0], robotFront), 
+                            (0, robotFront), (0, 0, 255), 2)
+            theta = pi / 2
+         #Turn Right, it's more clear than the left
+         else:
+            cv2.arrowedLine(validationMaskImage, (robotCenter[0], robotFront), 
+                            (input_width-1, robotFront), (0, 0, 255), 2)
+            theta = -pi / 2
+
+         #mag = round(distance((robotCenter[0], robotFront), (0, robotFront)), 3)
+
+      #Display the magnitude and direction of the vector the robot should drive along
+      cv2.putText(validationMaskImage, "Dir: " + str(theta) + "rad", (10, 50), 
+                  cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+      #cv2.putText(validationMaskImage, "Magnitude: " + str(mag), (10, 80), 
+      #            cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2
 
       #Save the overlayed image
       cv2.imwrite(inference_dir + "/" + _id.replace(".jpg", "") + "_inference.jpg", validationMaskImage)
 
       n += 1
+      if numInfer is not None and n-1 == numInfer:
+         break
 
    return
 
+'''Compute the Euclidean distance between 2 points'''
+def distance(p1, p2):
+   return sqrt(((p1[0]-p2[0])**2) + ((p1[1]-p2[1])**2))
+
+'''Rank the images in based on performace in 4 trained models. Save the worst 20% by default
+   and return the average error of the worst 10%'''
 def rankImages(config_file):
    #Make inferences on the images in the image_dir
    ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -275,7 +394,6 @@ def rankImages(config_file):
    for i in range(num_worst):
       worst_file.write(rankings[i][0] + '\n')
    return
-
 
 #Turn the image to RGB and normalize it
 def image_augmentation(img):
