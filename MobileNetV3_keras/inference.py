@@ -9,8 +9,10 @@ import sys
 import os
 import cv2
 import configparser
-from math import sqrt, atan, pi
+from math import sqrt, atan, sin, cos, pi
 from random import randint
+
+from trajectory import *
 
 import matplotlib.pyplot as plt
 
@@ -141,6 +143,15 @@ def predictImages(config_file, weight_path, numInfer):
                                custom_objects={'_hard_swish':_hard_swish,
                                                '_relu6':_relu6})
 
+   trajectory = Trajectory(input_width, input_height, num_outputs)
+   robotCenter = trajectory.robotCenter
+   robotWidth = trajectory.robotWidth
+   robotCenter = trajectory.robotCenter
+   robotLeft = trajectory.robotLeft
+   robotRight = trajectory.robotRight
+   robotFront = trajectory.robotFront #Front of the robot
+   maxTranslation = trajectory.maxTranslation
+
    #Run through the images and predict the free space
    n = 1
    stepSize = input_width // num_outputs
@@ -159,39 +170,13 @@ def predictImages(config_file, weight_path, numInfer):
       #Load the image to draw the extracted mask data on for validation
       validationMaskImage = cv2.imread(_id_path)
 
-      #Info regarding the robot's position in the image
-      robotWidth = 50 #Represented in pixels
-      robotCenter = ((input_width-1)//2, input_height-1)
-      robotLeft = robotCenter[0] - robotWidth
-      robotRight = robotCenter[0] + robotWidth
-      robotFront = robotCenter[1] - 30 #Front of the robot
-      robotCloseUp = robotCenter[1] - 15 #The very front of the robot
-
       highestPoint = robotCenter
-      leftMax = robotCenter[1]
-      rightMax = robotCenter[1]
-      blocked = False
-      #close = False
       x = 0
       for i in range(len(prediction)):
          y = int(round(prediction[i] * input_height))
 
-         #Find the furthest point away from the bottom of the image
          if y < highestPoint[1]:
             highestPoint = (x, y)
-
-         #Get the furthest point away from the bottom to the left and right of 
-         #the robot in case there's an obtacle
-         if x < robotLeft and y < leftMax:
-               leftMax = y
-         elif x > robotRight and y < rightMax:
-            rightMax = y
-
-         #Determine if something is near the front of the robot
-         if x in range(robotLeft, robotRight+1) and y >= robotFront:
-            blocked = True
-            #if y >= robotCloseUp:
-            #   close = True
 
          #Draw circles on the original image to show where the predicted free space occurs
          validationMaskImage = cv2.circle(validationMaskImage, (x, y), 1, (0, 255, 0), -1)
@@ -209,46 +194,26 @@ def predictImages(config_file, weight_path, numInfer):
       #Draw a line representing the boundary of the front of the robot
       cv2.line(validationMaskImage, (robotLeft, robotFront), (robotRight, robotFront), (0, 0, 255), 2)
 
-      mag = 0
-      theta = 0
-      if not blocked:
-         #Draw an arrow connecting the center to the furthest point
-         cv2.arrowedLine(validationMaskImage, robotCenter, highestPoint, (0, 0, 255), 2)
-
-         #Calculate magnitude and direction of vector
-         #mag = distance(robotCenter, highestPoint)
-         diff_x = robotCenter[0] - highestPoint[0]
-         diff_y = robotCenter[1] - highestPoint[1]
-         theta = atan(diff_x / diff_y)
-
-      else:
-         #Obstruction is right in front of the robot, backup
-         #if close:
-         #   cv2.arrowedLine(validationMaskImage, (robotCenter[0], robotFront), robotCenter, (0, 0, 255), 2, tipLength=0.4)
-         #   mag = distance(robotCenter, (robotCenter[0], robotFront))
-         #  theta = 0
-
-         #Turn away from the obstruction
-         #else:
-         #Choose a direction to turn (left or right)
-         #Turn Left, it's more clear than the right
-         if leftMax < rightMax:
-            cv2.arrowedLine(validationMaskImage, (robotCenter[0], robotFront), 
-                            (0, robotFront), (0, 0, 255), 2)
-            theta = pi / 2
-         #Turn Right, it's more clear than the left
-         else:
-            cv2.arrowedLine(validationMaskImage, (robotCenter[0], robotFront), 
-                            (input_width-1, robotFront), (0, 0, 255), 2)
-            theta = -pi / 2
-
-         #mag = round(distance((robotCenter[0], robotFront), (0, robotFront)), 3)
+      #Calculate the trajectory of the robot
+      (translation, rotation) = trajectory.calculateTrajectory(prediction)
+      #Convert the trajectory percentages to the target point
+      (translation_x, translation_y) = trajectory.trajectoryToPoint(translation, rotation)
 
       #Display the magnitude and direction of the vector the robot should drive along
-      cv2.putText(validationMaskImage, "Dir: " + str(theta) + "rad", (10, 50), 
+      cv2.putText(validationMaskImage, "Rotation: " + str(rotation), (10, 50), 
                   cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
-      #cv2.putText(validationMaskImage, "Magnitude: " + str(mag), (10, 80), 
-      #            cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2
+      cv2.putText(validationMaskImage, "Translation: " + str(translation), (10, 80), 
+                  cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+
+      #Draw an arrowed line indicating the predicted trajectory of the robot
+      if rotation == -1 and translation == 0:
+         cv2.arrowedLine(validationMaskImage, (robotCenter[0], robotFront), 
+                                              (input_width-1, robotFront), (0, 0, 255), 2)
+      elif rotation == 1 and translation == 0:
+         cv2.arrowedLine(validationMaskImage, (robotCenter[0], robotFront), 
+                                              (0, robotFront), (0, 0, 255), 2)
+      else:
+         cv2.arrowedLine(validationMaskImage, robotCenter, (translation_x, translation_y), (0, 0, 255), 2)
 
       #Save the overlayed image
       cv2.imwrite(inference_dir + "/" + _id.replace(".jpg", "") + "_inference.jpg", validationMaskImage)

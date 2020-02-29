@@ -35,6 +35,9 @@ Usage: python3 inference.py -c <config_file> [-n <int>] [-w <weights>] | [-r]
 * -n: An optional flag argument to specify the number of images to make predictions for
 * -r: An optional flag argument to instead rank images based on their performance in the 4 models used from the weight files.
 
+## trajectory.py
+**Functionality**: A class that implements a driving policy. The driving policy selects the point that is furthest away from the robot's current position to drive towards. If there is an obstacle in front of the robot, the policy will have the robot turn left or right based on which side has the point furthest away from the robot. The class needs to be given the width and height of images used, and the number of outputs from the model when created.
+
 ## Config File
 
 ### **model**
