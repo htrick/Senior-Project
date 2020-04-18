@@ -58,6 +58,14 @@ weight_path|Saved weights of MobileNet V3 model.|str|weights/2_5_ep200-loss0.014
 image_path|Path to the images to make predictions for with the MobileNet V3 model.|str|../Input_Images
 inference_dir|Path to save the model predictions|str|Model_Predictions
 
+### **video_inference**
+Argument|Description|Type|Default
+---|---|---|---
+weight_path|Saved weights of MobileNet V3 model.|str|weights/2_5_ep200-loss0.014_1.h5
+bag_file_path|Bag file to read from.|str|None
+bag_file_topics|Topics of tha bag file.|str|None
+
+
 ### **rank**
 Argument|Description|Type|Default
 ---|---|---|---
