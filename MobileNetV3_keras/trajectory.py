@@ -13,6 +13,7 @@ class Trajectory:
       self.robotLeft = self.robotCenter[0] - self.robotWidth
       self.robotRight = self.robotCenter[0] + self.robotWidth
       self.robotFront = self.robotCenter[1] - 30 #Front of the robot
+      self.robotCloseUp = self.robotCenter[1] - 15 #The very front of the robot
       self.maxTranslation = self.distance(self.robotCenter, (self.width, 0))
 
    def calculateTrajectory(self, prediction):
@@ -23,7 +24,7 @@ class Trajectory:
 
       x = 0
       for i in range(self.num_outputs):
-         y = int(round(prediction[i] * (self.height - 1)))
+         y = int(round(prediction[i] * (self.height)))
 
          #Find the furthest point away from the bottom of the image
          if y < highestPoint[1]:
@@ -32,7 +33,7 @@ class Trajectory:
          #Get the furthest point away from the bottom to the left and right of 
          #the robot in case there's an obtacle
          if x < self.robotLeft and y < leftMax:
-               leftMax = y
+            leftMax = y
          elif x > self.robotRight and y < rightMax:
             rightMax = y
 
@@ -46,11 +47,11 @@ class Trajectory:
       if not blocked:
          #Calculate trajectory of the robot
          magnitude = self.distance(self.robotCenter, highestPoint)
-         translation = magnitude / self.maxTranslation
+         translation = magnitude / float(self.maxTranslation)
          diff_x = self.robotCenter[0] - highestPoint[0]
          diff_y = self.robotCenter[1] - highestPoint[1]
-         theta = atan(diff_x / diff_y)
-         rotation = theta / (pi / 2)
+         theta = atan(diff_x / float(diff_y))
+         rotation = theta / (pi / 2.0)
 
       else:
          translation = 0
@@ -66,7 +67,7 @@ class Trajectory:
 
    '''Turn the given trajectory and rotaiton into the point to go towards'''
    def trajectoryToPoint(self, translation, rotation):
-      theta = rotation * (pi / 2)
+      theta = rotation * (pi / 2.0)
       mag = translation * self.maxTranslation
       translation_x = self.robotCenter[0] - int(mag * sin(theta))
       translation_y = self.robotCenter[1] - int(mag * cos(theta))
@@ -74,4 +75,4 @@ class Trajectory:
 
    '''Compute the Euclidean distance between 2 points'''
    def distance(self, p1, p2):
-      return sqrt(((p1[0]-p2[0])**2) + ((p1[1]-p2[1])**2))
+      return sqrt(((p1[0]-p2[0])**2.0) + ((p1[1]-p2[1])**2.0))
