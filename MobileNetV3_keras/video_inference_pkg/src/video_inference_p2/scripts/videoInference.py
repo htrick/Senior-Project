@@ -2,6 +2,7 @@
 
 import sys
 import os
+print(__file__)
 sys.path.append(os.path.dirname(__file__) + '/../../../../src')
 sys.path.append(os.path.dirname(__file__) + '/../../../../')
 print(sys.version)
@@ -36,25 +37,25 @@ def parseCommandLine(numArgs, args):
    for i in range(numArgs):
       if args[i] == '-c':
          if '-c' in flags:
-            print("Usage: rosrun video_inference_p2 videoInference.py -c <config_file> [-t <bag_file_topics>] [-b <bag_file>] [-w <weights>]")
+            print("Usage: rosrun video_inference_p2 videoinference.py -c <config_file> [-t <bag_file_topics>] [-b <bag_file>] [-w <weights>]")
             return []
          flags.append(args[i])
 
       if args[i] == '-w':
          if '-w' in flags:
-            print("Usage: rosrun video_inference_p2 videoInference.py -c <config_file> [-t <bag_file_topics>] [-b <bag_file>] [-w <weights>]")
+            print("Usage: rosrun video_inference_p2 videoinference.py -c <config_file> [-t <bag_file_topics>] [-b <bag_file>] [-w <weights>]")
             return []
          flags.append(args[i])
 
       if args[i] == '-b':
          if '-b' in flags:
-            print("Usage: rosrun video_inference_p2 videoInference.py -c <config_file> [-t <bag_file_topics>] [-b <bag_file>] [-w <weights>]")
+            print("Usage: rosrun video_inference_p2 videoinference.py -c <config_file> [-t <bag_file_topics>] [-b <bag_file>] [-w <weights>]")
             return []
          flags.append(args[i])
 
       if args[i] == '-t':
          if '-t' in flags:
-            print("Usage: rosrun video_inference_p2 videoInference.py -c <config_file> [-t <bag_file_topics>] [-b <bag_file>] [-w <weights>]")
+            print("Usage: rosrun video_inference_p2 videoinference.py -c <config_file> [-t <bag_file_topics>] [-b <bag_file>] [-w <weights>]")
             return []
          flags.append(args[i])
 
@@ -91,7 +92,7 @@ def main():
 
    #Config file flag was not specified
    if config_file is None:
-      print("Usage: rosrun video_inference_p2 videoInference.py -c <config_file> [-t <bag_file_topics>] [-b <bag_file>] [-w <weights>]")
+      print("Usage: rosrun video_inference_p2 videoinference.py -c <config_file> [-t <bag_file_topics>] [-b <bag_file>] [-w <weights>]")
       return
 
    #Predict the free space in the images
@@ -107,7 +108,7 @@ def predictImages(config_file, weight_path, bag_file, bag_file_topics):
    n = 0
 
    #Create a publisher
-   image_pub = rospy.Publisher("image_inferencer",Image)
+   image_pub = rospy.Publisher("image_inferencer", Image)
    bridge = CvBridge()
 
    #Initialize a node
@@ -151,6 +152,9 @@ def predictImages(config_file, weight_path, bag_file, bag_file_topics):
    print("Loading Model")
 
    #Load the the new model
+   '''model = load_model(os.path.join(ROOT_DIR, weight_path),
+                                        custom_objects={'_hard_swish':_hard_swish,
+                                                        '_relu6':_relu6})'''
    model = load_model(weight_path,
                       custom_objects={'_hard_swish':_hard_swish,
                                       '_relu6':_relu6})
@@ -168,8 +172,13 @@ def predictImages(config_file, weight_path, bag_file, bag_file_topics):
    #Run through the images and predict the free space and trajectory
    stepSize = input_width // num_outputs
    for topic, msg, t in bag.read_messages(topics=[bag_file_topics]):
+      #Exit on shutdown
+      if rospy.is_shutdown():
+         print('Shutting down inferenceer')
+         exit()
       #Copy the frame to show processing
-      frame = bridge.imgmsg_to_cv2(msg, desired_encoding="passthrough")
+      #frame = bridge.imgmsg_to_cv2(msg, desired_encoding="passthrough")
+      frame = bridge.compressed_imgmsg_to_cv2(msg)
       frame = cv2.resize(frame, (input_width, input_height))
       processed_frame = frame.copy()
 
@@ -191,10 +200,11 @@ def predictImages(config_file, weight_path, bag_file, bag_file_topics):
 
          #Draw circles on the original image to show where the predicted free space occurs
          processed_frame = cv2.circle(processed_frame, (x, y), 1, (0, 255, 0), -1)
+         #processed_frame = cv2.circle(processed_frame, (x, y), 1, (0, 0, 255), -1)
          x += stepSize
 
       #Draw a line across the image where the furthest point from the center is
-      cv2.line(processed_frame, (0, highestPoint[1]), (input_width-1, highestPoint[1]), (0, 0, 255), 2)
+      #cv2.line(processed_frame, (0, highestPoint[1]), (input_width-1, highestPoint[1]), (0, 0, 255), 2)
 
       #Draw lines representing the sides of the robot
       cv2.line(processed_frame, (robotCenter[0]-robotWidth, robotCenter[1]), 
