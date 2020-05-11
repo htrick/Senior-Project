@@ -151,10 +151,6 @@ def predictImages(config_file, weight_path, bag_file, bag_file_topics):
 
    print("Loading Model")
 
-   #Load the the new model
-   '''model = load_model(os.path.join(ROOT_DIR, weight_path),
-                                        custom_objects={'_hard_swish':_hard_swish,
-                                                        '_relu6':_relu6})'''
    model = load_model(weight_path,
                       custom_objects={'_hard_swish':_hard_swish,
                                       '_relu6':_relu6})
@@ -169,6 +165,9 @@ def predictImages(config_file, weight_path, bag_file, bag_file_topics):
    robotCloseUp = trajectory.robotCloseUp #The very front of the robot
    maxTranslation = trajectory.maxTranslation
 
+   prevFrameRotation = None
+   jitter = 0
+
    #Run through the images and predict the free space and trajectory
    stepSize = input_width // num_outputs
    for topic, msg, t in bag.read_messages(topics=[bag_file_topics]):
@@ -177,7 +176,6 @@ def predictImages(config_file, weight_path, bag_file, bag_file_topics):
          print('Shutting down inferenceer')
          exit()
       #Copy the frame to show processing
-      #frame = bridge.imgmsg_to_cv2(msg, desired_encoding="passthrough")
       frame = bridge.compressed_imgmsg_to_cv2(msg)
       frame = cv2.resize(frame, (input_width, input_height))
       processed_frame = frame.copy()
@@ -200,11 +198,7 @@ def predictImages(config_file, weight_path, bag_file, bag_file_topics):
 
          #Draw circles on the original image to show where the predicted free space occurs
          processed_frame = cv2.circle(processed_frame, (x, y), 1, (0, 255, 0), -1)
-         #processed_frame = cv2.circle(processed_frame, (x, y), 1, (0, 0, 255), -1)
          x += stepSize
-
-      #Draw a line across the image where the furthest point from the center is
-      #cv2.line(processed_frame, (0, highestPoint[1]), (input_width-1, highestPoint[1]), (0, 0, 255), 2)
 
       #Draw lines representing the sides of the robot
       cv2.line(processed_frame, (robotCenter[0]-robotWidth, robotCenter[1]), 
@@ -237,11 +231,17 @@ def predictImages(config_file, weight_path, bag_file, bag_file_topics):
          cv2.arrowedLine(processed_frame, robotCenter, (translation_x, translation_y), (0, 0, 255), 2)
 
       n += 1
-
+                  
       try:
          image_pub.publish(bridge.cv2_to_imgmsg(processed_frame, "bgr8"))
       except CvBridgeError as e:
          print(e)
+
+      if prevFrameRotation is not None:
+         jitter += rotation - prevFrameRotation
+      prevFrameRotation = rotation
+
+   print("Jitter: " + str(jitter))
 
    return
 

@@ -1,5 +1,7 @@
 from math import sqrt, atan, sin, cos, pi
 
+from numpy import median
+
 class Trajectory:
    def __init__(self, width, height, num_outputs):
       self.width = width
@@ -17,7 +19,8 @@ class Trajectory:
       self.maxTranslation = self.distance(self.robotCenter, (self.width, 0))
 
    def calculateTrajectory(self, prediction):
-      highestPoint = self.robotCenter
+      highestPoint_X = [self.robotCenter[0]]
+      highestPoint_Y = [self.robotCenter[1]]
       leftMax = self.robotCenter[1]
       rightMax = self.robotCenter[1]
       blocked = False
@@ -26,9 +29,13 @@ class Trajectory:
       for i in range(self.num_outputs):
          y = int(round(prediction[i] * (self.height)))
 
-         #Find the furthest point away from the bottom of the image
-         if y < highestPoint[1]:
-            highestPoint = (x, y)
+         #Find the set of furthest points away from the bottom of the image
+         if y < min(highestPoint_Y) - 2:
+            highestPoint_Y = [y]
+            highestPoint_X = [x]
+         elif y < min(highestPoint_Y) + 5 and y >= min(highestPoint_Y) - 2 and x - max(highestPoint_X) == self.stepSize:
+            highestPoint_Y.append(y)
+            highestPoint_X.append(x)
 
          #Get the furthest point away from the bottom to the left and right of 
          #the robot in case there's an obtacle
@@ -45,6 +52,7 @@ class Trajectory:
       magnitude = 0
       theta = 0
       if not blocked:
+         highestPoint = (median(highestPoint_X), median(highestPoint_Y))
          #Calculate trajectory of the robot
          magnitude = self.distance(self.robotCenter, highestPoint)
          translation = magnitude / float(self.maxTranslation)
