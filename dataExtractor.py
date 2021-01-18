@@ -7,6 +7,7 @@ import sys
 import shutil
 import ast
 import configparser
+import json
 import numpy as np
 from PIL import Image
 from random import randint
@@ -57,8 +58,14 @@ class DataExtractor:
                "-n <filename.csv> -c <filename> [-p <0-1>]")
          return
 
+      # Get the file extension type
+      fileType = dataFile.split(".")[-1]
+      if fileType != "csv" and fileType != "json":
+         print("File type not supported")
+         return
+
       #Download the images and their associated data
-      self.downloadImageData(downloadType, dataFile, configFile)
+      self.downloadImageData(downloadType, dataFile, fileType, configFile)
 
       #Split images into training and validation directories,
       #Creates new random splits on every call
@@ -147,12 +154,12 @@ class DataExtractor:
          print("Error: {0}".format(err))
          return
 
-   '''Download the image and mask data from the .csv file.'''
-   def downloadImageData(self, flag, csvFile, configFile):
+   # Download the image and mask data from the data file.
+   def downloadImageData(self, flag, dataFile, fileType, configFile):
       try:
-         imageFile = open(csvFile, 'r') #Open the csv file
+         imageFile = open(dataFile, 'r') #Open the data file
       except:
-         print("Error opening file: " + csvFile)
+         print("Error opening file: " + dataFile)
          return
 
       # ** get configuration
@@ -166,7 +173,8 @@ class DataExtractor:
       # ** Number of outputs
       numOutputs = config_client.getint('model', 'num_outputs')
 
-      reader = csv.DictReader(imageFile)
+      # List of image task data
+      reader = csv.DictReader(imageFile) if fileType == "csv" else json.load(imageFile)
       try:
          if (flag == '-a'):
             whiteList = open("Whitelisted_Images.txt", 'w')
@@ -202,30 +210,37 @@ class DataExtractor:
          print("Error: {0}".format(err))
          return
 
-      #Download the images and masks from the csv file
+      #Download the images and masks from the data file
       imgNum = 0
       for row in reader:
          imgNum += 1
          print("Image: " + str(imgNum), end = '')
 
          #The name of the original image
-         imgName = row['ID'] + ".jpg"
+         imgName = row['ID' if fileType == "csv" else "task_id"] + ".jpg"
 
-         #Get the review score of the image
-         review = row['Reviews']
-         review = ast.literal_eval(review)
-         runningScore = 0
-         numScores = len(review)
-         for i in range(numScores):
-            #Load the current entry as a dictionary
-            entry = ast.literal_eval(str(review[i]))
-            #Add the score of the entry to the running total
-            runningScore += entry['score']
+         # Make sure image is approved
+         if (fileType == "csv"):
+            #Get the review score of the image
+            review = row['Reviews']
+            review = ast.literal_eval(review)
+            runningScore = 0
+            numScores = len(review)
+            for i in range(numScores):
+               #Load the current entry as a dictionary
+               entry = ast.literal_eval(str(review[i]))
+               #Add the score of the entry to the running total
+               runningScore += entry['score']
 
-         #If the image has a non-positive score, do not download it
-         if runningScore <= 0:
-            print('\nImage ' + row['ID'] + " has a non-positive score. Skipping image")
-            continue
+            #If the image has a non-positive score, do not download it
+            if runningScore <= 0:
+               print('\nImage ' + row['ID'] + " has a non-positive score. Skipping image")
+               continue
+
+         else: # Check approval of image in json file
+            if row["customer_review_status"] != "accepted" and row["customer_review_status"] != "fixed":
+               print("\nImage " + row["task_id"] + " has not been accepted. Skipping image")
+               continue
 
          '''Check if current image is already downloaded and only new images
             need to be download. If it exists, continue to the next image'''
@@ -235,7 +250,7 @@ class DataExtractor:
 
          #Get the original image
          print(" Getting Original, ", end = '')
-         imgUrl = row['Labeled Data']
+         imgUrl = row['Labeled Data'] if fileType == "csv" else row["params"]["attachment"]
          orgImg = self.getImageFromURL(imgUrl) #Retrieve the original image
          newImg = Image.open(orgImg[0])
          newImg = newImg.convert("RGB")   #Convert the image to RGB format
@@ -256,41 +271,50 @@ class DataExtractor:
          #Create a blank image to draw the mask on
          orgMask = np.zeros([origHeight, origWidth, 3], dtype=np.uint8)
 
-         #Get the mask labels
-         freeSpace = row['Label']
-         freeSpace = ast.literal_eval(freeSpace)
-         freeSpace = freeSpace['Free space']
+         # Get polygon coordinates
+         if fileType == "csv":
+            #Get the mask labels
+            freeSpace = row['Label']
+            freeSpace = ast.literal_eval(freeSpace)
+            freeSpace = freeSpace['Free space']
 
-         #Get each polygon in the mask
-         polygons = []
-         numPolygons = len(freeSpace)
-         for i in range(numPolygons):
-            #Get the dictionary storing the points for the current polygon
-            geometry = ast.literal_eval(str(freeSpace[i]))
-            geometry = geometry['geometry']
-            numPoints = len(geometry)
+            #Get each polygon in the mask
+            polygons = []
+            numPolygons = len(freeSpace)
+            for i in range(numPolygons):
+               #Get the dictionary storing the points for the current polygon
+               geometry = ast.literal_eval(str(freeSpace[i]))
+               geometry = geometry['geometry']
+               numPoints = len(geometry)
 
-            #Form an array of points for the current polygon
+               #Form an array of points for the current polygon
+               points = []
+               for p in range(numPoints):
+                  point = ast.literal_eval(str(geometry[p]))
+                  x = point['x']
+                  y = point['y']
+                  points.append((x, y))
+
+               #Change the points array to a numpy array
+               points = np.array(points)
+               polygons.append(points)
+
+         else: # json file type
+            polygons = []
             points = []
-            for p in range(numPoints):
-               point = ast.literal_eval(str(geometry[p]))
-               x = point['x']
-               y = point['y']
-               points.append((x, y))
-
-            #Change the points array to a numpy array
-            points = np.array(points)
-            polygons.append(points)
+            for point in row["response"]["annotations"][0]["vertices"]:
+               points.append((int(round(point["x"])), int(round(point["y"]))))
+            polygons.append(np.array(points))
 
          #Draw the mask and save it
          orgMask = cv2.fillPoly(orgMask, polygons, (255, 255, 255), lineType=cv2.LINE_AA)
          newMask = cv2.resize(orgMask, (imgWidth, imgHeight))
-         cv2.imwrite(dirPath + "/Image_Masks/" + row['ID'] + "_mask.png", newMask)
+         cv2.imwrite(dirPath + "/Image_Masks/" + row['ID' if fileType == "csv" else "task_id"] + "_mask.png", newMask)
 
          #Open the mask using PIL
-         newMask = Image.open(dirPath + "/Image_Masks/" + row['ID'] + "_mask.png").convert('L')
+         newMask = Image.open(dirPath + "/Image_Masks/" + row['ID' if fileType == "csv" else "task_id"] + "_mask.png").convert('L')
 
-         maskDataFile = open(dirPath + "/Mask_Data/" + row['ID'] + "_mask_data.txt", 'w')
+         maskDataFile = open(dirPath + "/Mask_Data/" + row['ID' if fileType == "csv" else "task_id"] + "_mask_data.txt", 'w')
          #Get the pixel array and witdh/height of the original image
          pixels = newMask.load()
          width, height = newMask.size
@@ -316,19 +340,19 @@ class DataExtractor:
             x += stepSize
 
          #Save the overlayed image
-         cv2.imwrite(dirPath + "/Mask_Validation/" + row['ID'] + "_validation_mask.jpg",
+         cv2.imwrite(dirPath + "/Mask_Validation/" + row['ID' if fileType == "csv" else "task_id"] + "_validation_mask.jpg",
                      validationMaskImage)
 
          #Check if the mask for the current image can be whitelisted
          #print("Validating mask")
          inValid = self.checkForBlackEdges(pixels, width, height)
          if not inValid:
-            newMask.save(dirPath + "/Whitelist_Masks/" + row['ID'] + "_mask.png")
-            whiteList.write(row['ID'] + '.png\n')
+            newMask.save(dirPath + "/Whitelist_Masks/" + row['ID' if fileType == "csv" else "task_id"] + "_mask.png")
+            whiteList.write(row['ID' if fileType == "csv" else "task_id"] + '.png\n')
          else:
-            newMask.save(dirPath + "/Blacklist_Masks/" + row['ID'] + "_mask.png")
-            print("Potential labeling error for image: " + row['ID'])
-            blackList.write(row['ID'] + '.png\n')
+            newMask.save(dirPath + "/Blacklist_Masks/" + row['ID' if fileType == "csv" else "task_id"] + "_mask.png")
+            print("Potential labeling error for image: " + row['ID' if fileType == "csv" else "task_id"])
+            blackList.write(row['ID' if fileType == "csv" else "task_id"] + '.png\n')
 
          maskDataFile.close()
          newMask.close()
