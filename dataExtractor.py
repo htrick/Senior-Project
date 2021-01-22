@@ -179,7 +179,8 @@ class DataExtractor:
 
       # ** Number of outputs
       numOutputs = config_client.getint('model', 'num_outputs')
-
+        
+      '''             
       try:
          if (flag == '-a'):
             whiteList = open("Whitelisted_Images.txt", 'w')
@@ -192,6 +193,7 @@ class DataExtractor:
       except OSError as err:
          print("Error: {0}".format(err))
          return
+      '''
 
       dirPath = os.getcwd() # Get the current directory path
 
@@ -297,7 +299,8 @@ class DataExtractor:
          # Save the overlayed image
          cv2.imwrite(dirPath + "/Mask_Validation/" + id + "_validation_mask.jpg",
                      validationMaskImage)
-
+        
+         '''
          # Check if the mask for the current image can be whitelisted
          inValid = self.checkForBlackEdges(pixels, width, height)
          if not inValid:
@@ -307,6 +310,7 @@ class DataExtractor:
             newMask.save(dirPath + "/Blacklist_Masks/" + id + "_mask.png")
             print("Potential labeling error for image: " + id)
             blackList.write(id + '.png\n')
+        '''
 
          maskDataFile.close()
          newMask.close()
