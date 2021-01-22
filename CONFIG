@@ -1,0 +1,4 @@
+[model]
+input_width: 640
+input_height: 360
+num_outputs: 64
