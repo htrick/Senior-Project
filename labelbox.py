@@ -4,6 +4,10 @@ import numpy as np
 
 class Labelbox:
 
+   # Get the name of the location of the image
+   def getLocationName(self):
+      return "LabelBox"
+
    # List of image task data
    def listImageTaskData(self, imageFile):
       return csv.DictReader(imageFile)

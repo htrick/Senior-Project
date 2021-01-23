@@ -9,13 +9,14 @@ numpy >= 1.17.2
 ```
 
 ## dataExtractor.py
-**Functionality**: Download the images and extract mask information from the given data file. If the -a flag is given, re-download all the images in the file. If the -n flag is given, download only new images in the file. If the -clean flag is given, remove all the images and directories. If the -p flag is given, the following float will determine the percentage of images to use for validation. The -c flag is used to determine the config file to use to get the model input/output sizes On each run of the script with the -a or -n flag will remove the old training and validation sets and generate a new split of training and validation images based on all the images that are in the Input_Images directory.
+**Functionality**: Download the images and extract mask information from the given data file. If the -labelbox flag is used, it will download from a LabelBox csv file. If the -scale flag is used, it will download from a scale.ai json file. If both flags are given, it will download from both types of files. If the -a flag is given, re-download all the images in the file. If the -n flag is given, download only new images in the file. If the -clean flag is given, remove all the images and directories. If the -p flag is given, the following float will determine the percentage of images to use for validation. The -c flag is used to determine the config file to use to get the model input/output sizes On each run of the script with the -a or -n flag will remove the old training and validation sets and generate a new split of training and validation images based on all the images that are in the Input_Images directory.
 ```
-"Usage: python3 dataExtractor.py -clean | -a <filename> -c <filename> [-p <0-1>] | -n <filename> -c <filename> [-p <0-1>]"
+"Usage: python3 dataExtractor.py -clean | <-a|-n> -labelbox <filename.csv> [-scale <filename.json>] -c <filename> [-p <0-1>] | <-a|-n> -scale <filename.json> [-labelbox <filename.csv>] -c <filename> [-p <0-1>]"
 ``` 
 
 ## Command Line Arguments
-* filename: The name of the data file to download and extract image and mask data from
+* filename.csv: The name of the data file to download and extract image and mask data from if using a LabelBox file
+* filename.json: The name of the data file to download and extract image and mask data from if using a scale.ai file
 * -clean: A flag argument to remove all the directories and files containing image data, a way to 'clean' all directory
 * -a: A flag argument to re-download all of the images from the given data file that follows
 * -n: A flag argument to skip already downloaded images and their associated data and download any new images and their associated data from the given data file that follows
