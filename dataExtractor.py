@@ -14,6 +14,8 @@ import numpy as np
 from PIL import Image
 from random import randint
 
+USAGE_MESSAGE = "Usage: python3 dataExtractor.py -clean | <-a|-n> -labelbox <filename.csv> [-scale <filename.json>] -c <filename> [-p <0-1>] | <-a|-n> -scale <filename.json> [-labelbox <filename.csv>] -c <filename> [-p <0-1>]"
+
 class DataExtractor:
    # Extract input and expected output data from the csv file
    def _main(self):
@@ -24,6 +26,7 @@ class DataExtractor:
 
       #No flags were given
       if flags == []:
+         print(USAGE_MESSAGE)
          return
 
       if '-clean' in flags:
@@ -32,16 +35,24 @@ class DataExtractor:
 
       validPercent = 0.15
       configFile = None
-      dataFile = None
+      labelboxFile = None
+      scaleFile = None
       downloadType = None
 
       for f in flags:
          index = args.index(f)
 
-         # Save the file to download the images from
+         # Save the option to download all or only new images
          if f == '-n' or f == '-a':
-            dataFile = args[index+1]
             downloadType = f
+
+         # Save the LabelBox file to download the images from
+         elif f == '-labelbox':
+            labelboxFile = args[index+1]
+
+         # Save the scale.ai file to download the images from
+         elif f == '-scale':
+            scaleFile = args[index+1]
 
          # Save the percentage to use for validation
          elif f == '-p':
@@ -56,23 +67,15 @@ class DataExtractor:
             configFile = args[index+1]
 
       # Not all the required arguments were provided
-      if configFile is None or dataFile is None or downloadType is None:
-         print("Usage: python3 dataExtractor.py -clean | -a <filename.csv> -c <filename> [-p <0-1>] |" +\
-               "-n <filename.csv> -c <filename> [-p <0-1>]")
-         return
-
-      # Get the file extension type
-      fileType = dataFile.split(".")[-1]
-      if fileType == "csv":
-         data = labelbox.Labelbox()
-      elif fileType == "json":
-         data = scale_ai.Scale_ai()
-      else:
-         print("File type not supported")
+      if configFile is None or downloadType is None or (labelboxFile is None and scaleFile is None):
+         print(USAGE_MESSAGE)
          return
 
       # Download the images and their associated data
-      self.downloadImageData(downloadType, dataFile, configFile, data)
+      if labelboxFile is not None:
+         self.downloadImageData(downloadType, labelboxFile, configFile, labelbox.Labelbox())
+      if scaleFile is not None:
+         self.downloadImageData(downloadType, scaleFile, configFile, scale_ai.Scale_ai())
 
       # Split images into training and validation directories,
       # Creates new random splits on every call
@@ -87,37 +90,38 @@ class DataExtractor:
       for i in range(numArgs):
          if args[i] == '-clean':
             if numArgs != 2:
-               print("Usage: python3 dataExtractor.py -clean | -a <filename.csv> -c <filename> [-p <0-1>] |" +\
-                     "-n <filename.csv> -c <filename> [-p <0-1>]")
+               print(USAGE_MESSAGE)
                return []
             flags.append(args[i])
             return flags
 
-         if args[i] == '-n':
+         if args[i] == '-a' or args[i] == '-n':
             if '-a' in flags or '-n' in flags:
-               print("Usage: python3 dataExtractor.py -clean | -a <filename.csv> -c <filename> [-p <0-1>] |" +\
-                     "-n <filename.csv> -c <filename> [-p <0-1>]")
-               return []
-            flags.append(args[i])
-
-         if args[i] == '-a':
-            if '-a' in flags or '-n' in flags:
-               print("Usage: python3 dataExtractor.py -clean | -a <filename.csv> -c <filename> [-p <0-1>] |" +\
-                     "-n <filename.csv> -c <filename> [-p <0-1>]")
+               print(USAGE_MESSAGE)
                return []
             flags.append(args[i])
 
          if args[i] == '-p':
             if '-p' in flags:
-               print("Usage: python3 dataExtractor.py -clean | -a <filename.csv> -c <filename> [-p <0-1>] |" +\
-                     "-n <filename.csv> -c <filename> [-p <0-1>]")
+               print(USAGE_MESSAGE)
                return []
             flags.append(args[i])
 
          if args[i] == '-c':
             if '-c' in flags:
-               print("Usage: python3 dataExtractor.py -clean | -a <filename.csv> -c <filename> [-p <0-1>] |" +\
-                     "-n <filename.csv> -c <filename> [-p <0-1>]")
+               print(USAGE_MESSAGE)
+               return []
+            flags.append(args[i])
+         
+         if args[i] == '-labelbox':
+            if '-labelbox' in flags:
+               print(USAGE_MESSAGE)
+               return []
+            flags.append(args[i])
+         
+         if args[i] == '-scale':
+            if '-scale' in flags:
+               print(USAGE_MESSAGE)
                return []
             flags.append(args[i])
 
