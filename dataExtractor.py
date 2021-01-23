@@ -207,10 +207,12 @@ class DataExtractor:
             os.mkdir(dirPath + '/Mask_Data')
          if not os.path.isdir(dirPath + '/Mask_Validation'):
             os.mkdir(dirPath + '/Mask_Validation')
+         '''
          if not os.path.isdir(dirPath + '/Blacklist_Masks'):
             os.mkdir(dirPath + '/Blacklist_Masks')
          if not os.path.isdir(dirPath + '/Whitelist_Masks'):
             os.mkdir(dirPath + '/Whitelist_Masks')
+         '''
          if not os.path.isdir(dirPath + '/Unlabeled'):
             os.mkdir(dirPath + '/Unlabeled')
       except OSError as err:
@@ -316,9 +318,10 @@ class DataExtractor:
          newMask.close()
 
       imageFile.close()
+      '''
       whiteList.close()
       blackList.close()
-
+      '''
       return
 
    # Extract 128 points representing the bounds of the image mask between 0-1. Takes in the pixel array representing the mask, and the width & height of the mask

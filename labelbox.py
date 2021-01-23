@@ -12,22 +12,8 @@ class Labelbox:
    def getID(self, row):
       return row["ID"]
 
-   # Check if the image has been approved and has a positive score
+   # All LabelBox images have been approved
    def isApproved(self, row):
-      # Get the review score of the image
-      review = row['Reviews']
-      review = ast.literal_eval(review)
-      runningScore = 0
-      numScores = len(review)
-      for i in range(numScores):
-         # Load the current entry as a dictionary
-         entry = ast.literal_eval(str(review[i]))
-         # Add the score of the entry to the running total
-         runningScore += entry['score']
-
-      # If the image has a non-positive score, do not download it
-      if runningScore <= 0:
-         return False
       return True
    
    # Get the URL for the original image
