@@ -112,13 +112,13 @@ class DataExtractor:
                print(USAGE_MESSAGE)
                return []
             flags.append(args[i])
-         
+
          if args[i] == '-labelbox':
             if '-labelbox' in flags:
                print(USAGE_MESSAGE)
                return []
             flags.append(args[i])
-         
+
          if args[i] == '-scale':
             if '-scale' in flags:
                print(USAGE_MESSAGE)
@@ -183,8 +183,8 @@ class DataExtractor:
 
       # ** Number of outputs
       numOutputs = config_client.getint('model', 'num_outputs')
-        
-      '''             
+
+      '''
       try:
          if (flag == '-a'):
             whiteList = open("Whitelisted_Images.txt", 'w')
@@ -273,7 +273,7 @@ class DataExtractor:
          polygons = data.getPolygons(row)
 
          # Draw the mask and save it
-         orgMask = cv2.fillPoly(orgMask, polygons, (255, 255, 255), lineType=cv2.LINE_AA)
+         orgMask = cv2.fillPoly(orgMask, polygons, (255, 255, 255), lineType=cv2.LINE_8)
          newMask = cv2.resize(orgMask, (imgWidth, imgHeight))
          cv2.imwrite(dirPath + "/Image_Masks/" + id + "_mask.png", newMask)
 
@@ -305,7 +305,7 @@ class DataExtractor:
          # Save the overlayed image
          cv2.imwrite(dirPath + "/Mask_Validation/" + id + "_validation_mask.jpg",
                      validationMaskImage)
-        
+
          '''
          # Check if the mask for the current image can be whitelisted
          inValid = self.checkForBlackEdges(pixels, width, height)
