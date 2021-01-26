@@ -13,6 +13,8 @@ numpy >= 1.17.2
 ```
 "Usage: python3 dataExtractor.py -clean | <-a|-n> -labelbox <filename.csv> [-scale <filename.json>] -c <filename> [-p <0-1>] | <-a|-n> -scale <filename.json> [-labelbox <filename.csv>] -c <filename> [-p <0-1>]"
 ``` 
+```
+python3 dataExtractor.py -clean -a -labelbox labelbox_small_export.csv -scale tasks.json -c config
 
 ## Command Line Arguments
 * filename.csv: The name of the data file to download and extract image and mask data from if using a LabelBox file
