@@ -15,6 +15,7 @@ numpy >= 1.17.2
 ``` 
 ```
 python3 dataExtractor.py -clean -a -labelbox labelbox_small_export.csv -scale tasks.json -c config
+```
 
 ## Command Line Arguments
 * filename.csv: The name of the data file to download and extract image and mask data from if using a LabelBox file
