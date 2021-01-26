@@ -3,6 +3,10 @@ import numpy as np
 
 class Scale_ai:
 
+   # Get the name of the location of the image
+   def getLocationName(self):
+      return "scale.ai"
+
    # List of image task data
    def listImageTaskData(self, imageFile):
       return json.load(imageFile)
