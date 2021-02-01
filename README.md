@@ -15,7 +15,7 @@ numpy >= 1.17.2
 ``` 
 ```
 python3 dataExtractor.py -a -labelbox labelbox_small_export.csv -scale tasks.json -c config
-``'
+```
 
 ## Config File
 
