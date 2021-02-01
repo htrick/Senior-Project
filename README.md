@@ -15,16 +15,7 @@ numpy >= 1.17.2
 ``` 
 ```
 python3 dataExtractor.py -a -labelbox labelbox_small_export.csv -scale tasks.json -c config
-```
-
-## Command Line Arguments
-* filename.csv: The name of the data file to download and extract image and mask data from if using a LabelBox file
-* filename.json: The name of the data file to download and extract image and mask data from if using a scale.ai file
-* -clean: A flag argument to remove all the directories and files containing image data, a way to 'clean' all directory
-* -a: A flag argument to re-download all of the images from the given data file that follows
-* -n: A flag argument to skip already downloaded images and their associated data and download any new images and their associated data from the given data file that follows
-* -p: An optional flag argument to use with -a or -n to specify what percentage of the downloaded images to set aside for validation, percentage is to be a float between 0-1.0. Default percentage is 0.15
-* -c: A flag argument to specify the config file to use to determine the height and width of the images to save, and the number of points to extract from the image masks
+``'
 
 ## Config File
 
@@ -68,10 +59,6 @@ The images and their mask data gathered from the dataExtractor.py script are sto
 * **Image_Masks**: Stores a copy of all the masks associated with each of the input images.
 * **Mask_data**: Stores .txt files for all of the image masks with 128 points extracted from the respective image's mask stored in x,y column format. Each y in the data is normalized to between 0 and 1.
 * **Mask_Validation**: Stores a copy of each input image with the extracted 128 points from the image's mask overlayed as green circles to validate the correct data is extracted from the mask.
-* **Whitelist_Masks**: Stores all of the image masks for images that have been whitelisted to validate no image will be used whose original mask was made incorrectly.
-* **Blacklist_Masks**: Stores all the image masks for images that have been blacklisted to validate that ther are no images whose mask was made correctly will not used.
-* **Whitelist_Images.txt**: Stores the names of all the images that have been whitelisted to be used as input.
-* **Blacklist_Images.txt**: Stores the names of all the images that have been blacklisted to not be used as input because they might have a labeling error.
 * **Training_Images**: Stroes a copy of the original input images that are to be uesed for training.
 * **Validation_Images**: Stroes a copy of the original input images that are to be used for validation.
 * **Model_Prediction**: Stores a copy of the predictions made by the model for each of the images in the "image_path" directory in the config file used.
