@@ -24,6 +24,19 @@ numpy >= 1.17.2
 python3 dataExtractor.py -a -labelbox labelbox_small_export.csv -scale tasks.json -c config
 ```
 
+## labelme_to_scaleai.py
+Generates a JSON file in the format of scale.ai data based on a LabelMe dataset provided as a URL
+
+```
+usage: labelme_to_scaleai.py URL [destination]
+```
+
+Example:
+The following command would download all images from the URL into a single file named "labelme.json"
+```
+python3 labelme_to_scaleai.py http://users.csc.calpoly.edu/\~jseng/scale_ai_image/labelme/dataset_hdr
+```
+
 ## Config File
 
 ### **model**
