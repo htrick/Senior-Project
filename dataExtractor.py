@@ -10,66 +10,25 @@ import shutil
 import ast
 import configparser
 import json
+import argparse
 import numpy as np
 from PIL import Image
 from random import randint
 
-USAGE_MESSAGE = "Usage: python3 dataExtractor.py -clean | <-a|-n> -labelbox <filename.csv> [-scale <filename.json>] -c <filename> [-p <0-1>] | <-a|-n> -scale <filename.json> [-labelbox <filename.csv>] -c <filename> [-p <0-1>]"
-
 class DataExtractor:
    # Extract input and expected output data from the csv file
    def _main(self):
-      numArgs = len(sys.argv)
-      args = sys.argv
+      args = self.argumentParse()
 
-      flags = self.parseCommandLine(numArgs, args)
-
-      #No flags were given
-      if flags == []:
-         print(USAGE_MESSAGE)
-         return
-
-      if '-clean' in flags:
+      if args.clean == True:
          self.cleanData()
          return
 
-      validPercent = 0.15
-      configFile = None
-      labelboxFile = None
-      scaleFile = None
-      downloadType = None
-
-      for f in flags:
-         index = args.index(f)
-
-         # Save the option to download all or only new images
-         if f == '-n' or f == '-a':
-            downloadType = f
-
-         # Save the LabelBox file to download the images from
-         elif f == '-labelbox':
-            labelboxFile = args[index+1]
-
-         # Save the scale.ai file to download the images from
-         elif f == '-scale':
-            scaleFile = args[index+1]
-
-         # Save the percentage to use for validation
-         elif f == '-p':
-            try:
-               validPercent = float(args[index+1])
-            except:
-               print("Percentage used for the validation set must be a float between 0-1")
-               return
-
-         # Save the configuration file
-         elif f == '-c':
-            configFile = args[index+1]
-
-      # Not all the required arguments were provided
-      if configFile is None or downloadType is None or (labelboxFile is None and scaleFile is None):
-         print(USAGE_MESSAGE)
-         return
+      validPercent = args.p
+      configFile = args.c
+      labelboxFile = args.labelbox
+      scaleFile = args.scale
+      downloadType = '-a' if args.a == True else '-n'
 
       # Download the images and their associated data
       if labelboxFile is not None:
@@ -84,48 +43,25 @@ class DataExtractor:
       return
 
    # Parse the command line to find what flags were given
-   def parseCommandLine(self, numArgs, args):
-      flags = []
+   def argumentParse(self):
+      parser = argparse.ArgumentParser(prog = 'dataExtractor.py',usage = 'python3 dataExtractor.py [-clean] [-a] [-n] -p [percentage] -labelbox [CSV File] -scale [JSON File] -c [CONFIG FILE]')
+      parser.add_argument('-clean',action='store_true',help = 'Flag argument to remove all the directories and files containing image data')
+      parser.add_argument('-a',action='store_true',help = 'Flag argument to re-download all of the images from the given data file that follows')
+      parser.add_argument('-n',action='store_true',help = 'Flag argument to skip already downloaded images and their associated data and download any new images and their associated data and the given data file that follows')
+      parser.add_argument('-p',nargs='?',const=0.15,type=float,help = 'Flag argument to use with -a or -n to specify what percentage of the downloaded images to set aside for validation, percentage to be a float between 0 - 1.0. Default percentage is 0.15')
+      parser.add_argument('-c',nargs='?',type=str, const='config',help = 'Flag argument to specify the config file to use to determine the height and width of the images to save, and the number of points to extract from the image mask')
+      parser.add_argument('-labelbox',type=str,help = 'The name of the data file to download and extract image and mask data from, if using a LabelBox file')
+      parser.add_argument('-scale',type =str,help = 'The name of the data file to download and extract image and mask data from, if using a scale.ai file')
 
-      for i in range(numArgs):
-         if args[i] == '-clean':
-            if numArgs != 2:
-               print(USAGE_MESSAGE)
-               return []
-            flags.append(args[i])
-            return flags
+      args = parser.parse_args()
 
-         if args[i] == '-a' or args[i] == '-n':
-            if '-a' in flags or '-n' in flags:
-               print(USAGE_MESSAGE)
-               return []
-            flags.append(args[i])
+      if args.p == None or args.p < 0 or args.p > 1:
+         args.p = 0.15
 
-         if args[i] == '-p':
-            if '-p' in flags:
-               print(USAGE_MESSAGE)
-               return []
-            flags.append(args[i])
-
-         if args[i] == '-c':
-            if '-c' in flags:
-               print(USAGE_MESSAGE)
-               return []
-            flags.append(args[i])
-
-         if args[i] == '-labelbox':
-            if '-labelbox' in flags:
-               print(USAGE_MESSAGE)
-               return []
-            flags.append(args[i])
-
-         if args[i] == '-scale':
-            if '-scale' in flags:
-               print(USAGE_MESSAGE)
-               return []
-            flags.append(args[i])
-
-      return flags
+      if args.c == None and args.clean == False:
+         parser.print_usage()
+         parser.exit()
+      return args
 
    # Remove all the directories and files containing data information
    def cleanData(self):
