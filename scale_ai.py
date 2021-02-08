@@ -26,9 +26,10 @@ class Scale_ai:
    # Get the polygons for the mask data
    def getPolygons(self, row):
       polygons = []
-      points = []
-      for point in row["response"]["annotations"][0]["vertices"]:
-         points.append((int(round(point["x"])), int(round(point["y"]))))
-      polygons.append(np.array(points))
+      for polygon in row["response"]["annotations"]:
+         points = []
+         for point in polygon["vertices"]:
+            points.append((int(round(point["x"])), int(round(point["y"]))))
+         polygons.append(np.array(points))
 
       return polygons

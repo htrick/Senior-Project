@@ -11,7 +11,6 @@ def main():
    url, destination = parseCommandLine()
    
    # Download all of the image data
-   print('Downloading image data...\n')
    data = download_data(url)
 
    # Save the data to a JSON file
@@ -41,8 +40,11 @@ def download_data(url):
 
    data = []
 
+   all_xml_files = ['{}/Annotations/{}'.format(url, node.get('href')) for node in BeautifulSoup(page, 'html.parser').find_all('a') if node.get('href').endswith('xml')]
+   print('Downloading data for {} images...\n'.format(len(all_xml_files)))
+
    # For each xml file at <URL>/Annotations
-   for xml_url in ['{}/Annotations/{}'.format(url, node.get('href')) for node in BeautifulSoup(page, 'html.parser').find_all('a') if node.get('href').endswith('xml')]:
+   for xml_url in all_xml_files:
 
       # Download the XML file
       try:
@@ -58,7 +60,7 @@ def download_data(url):
       image_data = {}
 
       # Name of the image file
-      image_name = root[0].text
+      image_name = root.find('filename').text.strip()
       image_data['task_id'] = image_name.split('.')[0]
 
       # URL of the image
@@ -69,12 +71,25 @@ def download_data(url):
       image_data['customer_review_status'] = 'accepted'
 
       # Polygon coordinates of image
-      vertices = []
-      for point in root.iter('pt'):
-         x = point[0].text
-         y = point[1].text
-         vertices.append({'x': int(x), 'y': int(y)})
-      image_data['response'] = {'annotations': [{'vertices': vertices}]}
+      all_objects = root.findall('object')
+      if len(all_objects) == 0: # if the XML file has no polygons
+         width = int(root.find('imagesize').find('ncols').text.strip())
+         height = int(root.find('imagesize').find('nrows').text.strip())
+         # Create a line at the bottom of the image
+         vertices = [{'x': 0, 'y': height - 1}, {'x': width, 'y': height - 1}, {'x': width, 'y': height}, {'x': 0, 'y': height}]
+         image_data['response'] = {'annotations': [{'vertices': vertices}]}
+      else: # get the coordinates from the XML file
+         polygons = []
+         for polygon in all_objects:
+            # if the polygon has not been deleted
+            if polygon.find('deleted').text == '0':
+               vertices = []
+               for point in polygon.find('polygon').findall('pt'):
+                  x = point[0].text
+                  y = point[1].text
+                  vertices.append({'x': int(x), 'y': int(y)})
+               polygons.append({'vertices': vertices})
+         image_data['response'] = {'annotations': polygons}
 
       data.append(image_data)
 
