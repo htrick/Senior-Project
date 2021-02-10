@@ -42,14 +42,16 @@ def download_data(url):
 
    all_xml_files = ['{}/Annotations/{}'.format(url, node.get('href')) for node in BeautifulSoup(page, 'html.parser').find_all('a') if node.get('href').endswith('xml')]
    print('Downloading data for {} images...\n'.format(len(all_xml_files)))
-
+   count = 0
    # For each xml file at <URL>/Annotations
    for xml_url in all_xml_files:
+      count += 1
 
       # Download the XML file
       try:
          with open('temp', 'wb') as f:
             f.write(requests.get(xml_url).content)
+            print('Downloading file {}: {}'.format(count, xml_url.split('/')[-1]))
       except:
          print('Error downloading data from {}'.format(xml_url))
          continue
@@ -85,9 +87,11 @@ def download_data(url):
             if polygon.find('deleted').text == '0':
                vertices = []
                for point in polygon.find('polygon').findall('pt'):
-                  x = point[0].text
-                  y = point[1].text
-                  vertices.append({'x': int(x), 'y': int(y)})
+                  x = int(point[0].text)
+                  if x <= 4: # Fix a slanted left edge of a polygon
+                     x = 0
+                  y = int(point[1].text)
+                  vertices.append({'x': x, 'y': y})
                polygons.append({'vertices': vertices})
          image_data['response'] = {'annotations': polygons}
 
