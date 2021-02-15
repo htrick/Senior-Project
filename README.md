@@ -27,10 +27,14 @@ numpy >= 1.17.2
 * -p: An optional flag argument to use with -a or -n to specify what percentage of the downloaded images to set aside for validation, percentage is to be a float between 0-1.0. Default percentage is 0.15
 * -c: A flag argument to specify the config file to use to determine the height and width of the images to save, and the number of points to extract from the image masks
 ```
-"Usage: python3 dataExtractor.py -clean | <-a|-n> -labelbox <filename.csv> [-scale <filename.json>] -c <filename> [-p <0-1>] | <-a|-n> -scale <filename.json> [-labelbox <filename.csv>] -c <filename> [-p <0-1>]"
+"Usage: python3 dataExtractor.py [-clean] [-a] [-n] -p [0-1] -labelbox [filename.csv] -scale [filename(s).json] -c [filename]"
 ``` 
 ```
 python3 dataExtractor.py -a -labelbox labelbox_small_export.csv -scale tasks.json -c config
+
+python3 dataExtractor.py -a -scale labelme_hdr.json labelme_sdr.json -labelbox labelbox_small_export.csv -c config
+
+python3 dataExtractor.py -n -c -p .90 -labelbox labelbox_small_export.csv -scale tasks.json
 ```
 ## Directories
 The images and their mask data gathered from the dataExtractor.py script are stored in the following directories and .txt files. All directories and files are stored relative the path where the dataExtractor.py script was called from.
