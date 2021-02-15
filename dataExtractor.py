@@ -19,7 +19,7 @@ class DataExtractor:
    # Extract input and expected output data from the csv file
    def _main(self):
       args = self.argumentParse()
-
+      
       if args.clean == True:
          self.cleanData()
          return
@@ -27,14 +27,16 @@ class DataExtractor:
       validPercent = args.p
       configFile = args.c
       labelboxFile = args.labelbox
-      scaleFile = args.scale
       downloadType = '-a' if args.a == True else '-n'
 
       # Download the images and their associated data
       if labelboxFile is not None:
          self.downloadImageData(downloadType, labelboxFile, configFile, labelbox.Labelbox())
-      if scaleFile is not None:
-         self.downloadImageData(downloadType, scaleFile, configFile, scale_ai.Scale_ai())
+
+      if args.scale is not None:
+         for numScaleFiles in range(len(args.scale)):
+            scaleFile = args.scale[numScaleFiles]
+            self.downloadImageData(downloadType, scaleFile, configFile, scale_ai.Scale_ai())
 
       # Split images into training and validation directories,
       # Creates new random splits on every call
@@ -44,23 +46,46 @@ class DataExtractor:
 
    # Parse the command line to find what flags were given
    def argumentParse(self):
-      parser = argparse.ArgumentParser(prog = 'dataExtractor.py',usage = 'python3 dataExtractor.py [-clean] [-a] [-n] -p [percentage] -labelbox [CSV File] -scale [JSON File] -c [CONFIG FILE]')
+      parser = argparse.ArgumentParser(prog = 'dataExtractor.py',usage = 'python3 dataExtractor.py [-clean] [-a] [-n] -p [percentage] -labelbox [CSV file] -scale [JSON file(s)] -c [CONFIG file]')
+      
       parser.add_argument('-clean',action='store_true',help = 'Flag argument to remove all the directories and files containing image data')
       parser.add_argument('-a',action='store_true',help = 'Flag argument to re-download all of the images from the given data file that follows')
       parser.add_argument('-n',action='store_true',help = 'Flag argument to skip already downloaded images and their associated data and download any new images and their associated data and the given data file that follows')
       parser.add_argument('-p',nargs='?',const=0.15,type=float,help = 'Flag argument to use with -a or -n to specify what percentage of the downloaded images to set aside for validation, percentage to be a float between 0 - 1.0. Default percentage is 0.15')
       parser.add_argument('-c',nargs='?',type=str, const='config',help = 'Flag argument to specify the config file to use to determine the height and width of the images to save, and the number of points to extract from the image mask')
       parser.add_argument('-labelbox',type=str,help = 'The name of the data file to download and extract image and mask data from, if using a LabelBox file')
-      parser.add_argument('-scale',type =str,help = 'The name of the data file to download and extract image and mask data from, if using a scale.ai file')
+      parser.add_argument('-scale',nargs='*',type =str,help = 'The name of the data file to download and extract image and mask data from, if using a scale.ai file')
 
       args = parser.parse_args()
 
-      if args.p == None or args.p < 0 or args.p > 1:
-         args.p = 0.15
+      if(args.p != None):
+         if args.p < 0 or args.p > 1:
+            print("Value: %d is out of range. Value was set to 0.15" %args.p)
+            args.p = 0.15
 
-      if args.c == None and args.clean == False:
+      if (args.c == None and args.clean == False):
          parser.print_usage()
          parser.exit()
+
+      if(args.c != None):
+         if (os.path.exists(args.c) == False):
+            parser.print_usage()
+            print("CONFIG file: '%s' does not exist." %args.c)
+            parser.exit()
+      
+      if(args.labelbox != None):
+         if (os.path.exists(args.labelbox) == False):
+            parser.print_usage()
+            print("CSV file: '%s' does not exist." %args.labelbox)
+            parser.exit()
+
+      if(args.scale != None):
+         for numScaleFiles in range(len(args.scale)):
+            if (os.path.exists(args.scale[numScaleFiles]) == False):
+               parser.print_usage()
+               print("JSON file: '%s' does not exist." %args.scale[numScaleFiles])
+               parser.exit()
+      
       return args
 
    # Remove all the directories and files containing data information
