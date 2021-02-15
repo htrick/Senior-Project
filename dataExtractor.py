@@ -26,6 +26,7 @@ class DataExtractor:
 
       validPercent = args.p
       configFile = args.c
+      scaleFile = args.scale
       labelboxFile = args.labelbox
       downloadType = '-a' if args.a == True else '-n'
 
@@ -33,7 +34,8 @@ class DataExtractor:
       if labelboxFile is not None:
          self.downloadImageData(downloadType, labelboxFile, configFile, labelbox.Labelbox())
 
-      if args.scale is not None:
+      #Loop through the JSON files given and download data
+      if scaleFile is not None:
          for numScaleFiles in range(len(args.scale)):
             scaleFile = args.scale[numScaleFiles]
             self.downloadImageData(downloadType, scaleFile, configFile, scale_ai.Scale_ai())
@@ -46,39 +48,47 @@ class DataExtractor:
 
    # Parse the command line to find what flags were given
    def argumentParse(self):
-      parser = argparse.ArgumentParser(prog = 'dataExtractor.py',usage = 'python3 dataExtractor.py [-clean] [-a] [-n] -p [percentage] -labelbox [CSV file] -scale [JSON file(s)] -c [CONFIG file]')
+      parser = argparse.ArgumentParser(prog = 'dataExtractor.py',usage = 'Usage: python3 dataExtractor.py [-clean] [-a] [-n] -p [0-1] -labelbox [filename.csv] -scale [filename(s).json] -c [filename]')
       
       parser.add_argument('-clean',action='store_true',help = 'Flag argument to remove all the directories and files containing image data')
       parser.add_argument('-a',action='store_true',help = 'Flag argument to re-download all of the images from the given data file that follows')
       parser.add_argument('-n',action='store_true',help = 'Flag argument to skip already downloaded images and their associated data and download any new images and their associated data and the given data file that follows')
       parser.add_argument('-p',nargs='?',const=0.15,type=float,help = 'Flag argument to use with -a or -n to specify what percentage of the downloaded images to set aside for validation, percentage to be a float between 0 - 1.0. Default percentage is 0.15')
-      parser.add_argument('-c',nargs='?',type=str, const='config',help = 'Flag argument to specify the config file to use to determine the height and width of the images to save, and the number of points to extract from the image mask')
+      parser.add_argument('-c',nargs='?',type=str, const='config',help = 'Flag argument to specify the config file to use to determine the height and width of the images to save, and the number of points to extract from the image mask. Default file is "config"')
       parser.add_argument('-labelbox',type=str,help = 'The name of the data file to download and extract image and mask data from, if using a LabelBox file')
-      parser.add_argument('-scale',nargs='*',type =str,help = 'The name of the data file to download and extract image and mask data from, if using a scale.ai file')
+      parser.add_argument('-scale',nargs='*',type =str,help = 'The name of the data file(s) to download and extract image(s) and mask data from, if using a scale.ai file(s)')
 
       args = parser.parse_args()
 
+      #check if the -p flag exists and set to default value if non existent, or out of range
       if(args.p != None):
          if args.p < 0 or args.p > 1:
-            print("Value: %d is out of range. Value was set to 0.15" %args.p)
+            print("-p: %d is out of range. Value was set to 0.15" %args.p)
             args.p = 0.15
+      elif(args.p == None and args.clean == False):
+         args.p = 0.15
 
-      if (args.c == None and args.clean == False):
+      #check if the -c flag is present
+      if(args.c == None and args.clean == False):
+         print("-c flag was not found.")
          parser.print_usage()
          parser.exit()
 
+      #check if the -c file given exists
       if(args.c != None):
          if (os.path.exists(args.c) == False):
             parser.print_usage()
-            print("CONFIG file: '%s' does not exist." %args.c)
+            print("-c file: '%s' does not exist." %args.c)
             parser.exit()
       
+      #check if the CSV file given exists
       if(args.labelbox != None):
          if (os.path.exists(args.labelbox) == False):
             parser.print_usage()
             print("CSV file: '%s' does not exist." %args.labelbox)
             parser.exit()
 
+      #check if the JSON file(s) given exists
       if(args.scale != None):
          for numScaleFiles in range(len(args.scale)):
             if (os.path.exists(args.scale[numScaleFiles]) == False):
@@ -382,7 +392,11 @@ class DataExtractor:
          return
 
       # List all the images that have been downloaded, now and previously
-      images = os.listdir(dirPath + "/Input_Images")
+      if(os.path.exists(dirPath + "/Input_Images")):
+         images = os.listdir(dirPath + "/Input_Images")
+      else:
+         print("No images have been downloaded. Run with the CSV file and JSON file(s) to make sure images are accessible")
+         return
 
       # Determine how many images to use for validation
       numValid = round(len(images) * validPercent)
