@@ -201,7 +201,7 @@ class DataExtractor:
       imgNum = 0
       for row in reader:
          imgNum += 1
-         print(data.getLocationName() + " image: " + str(imgNum), end = '')
+         print(data.getLocationName() + " file: %s," %dataFile+ " image: " + str(imgNum), end = '')
 
          # Get the ID of the task/image
          id = data.getID(row)
