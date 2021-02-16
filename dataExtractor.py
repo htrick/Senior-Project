@@ -243,6 +243,10 @@ class DataExtractor:
          # Get the polygons for the mask data
          polygons = data.getPolygons(row)
 
+         # Check if there is a polygon labeling error
+         if self.checkLabelingError(polygons, origWidth):
+            print("Potential labeling error for image: " + id)
+
          # Draw the mask and save it
          orgMask = cv2.fillPoly(orgMask, polygons, (255, 255, 255), lineType=cv2.LINE_8)
          newMask = cv2.resize(orgMask, (imgWidth, imgHeight))
@@ -298,6 +302,20 @@ class DataExtractor:
       blackList.close()
       '''
       return
+
+   # Check if the left or right edge of the polygon is slanted
+   def checkLabelingError(self, polygons, width):
+      for polygon in polygons:
+         countXLeft = 0
+         countXRight = 0
+         for point in polygon:
+            if point[0] == 0:
+               countXLeft += 1
+            elif point[0] == width - 1:
+               countXRight += 1
+         if countXLeft == 1 or countXRight == 1:
+            return True
+      return False
 
    # Extract 128 points representing the bounds of the image mask between 0-1. Takes in the pixel array representing the mask, and the width & height of the mask
    def extractMaskPoints(self, pixels, width, height, numOutputs):
