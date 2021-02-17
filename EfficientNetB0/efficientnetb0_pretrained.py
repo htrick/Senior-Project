@@ -1,16 +1,14 @@
 from tensorflow.keras.applications import EfficientNetB0
-from tensorflow.keras.models import Model
-from tensorflow.keras.engine.input_layer import Input
+from tensorflow.keras import Model, Input
 from tensorflow.keras.layers import Dense, Reshape
 
 class EfficientNetB0_Pretrained:
     def __init__(self, shape, num_outputs, alpha=1.0):
         self.shape = shape
         self.num_outputs = num_outputs
-        self.alpha = alpha
     
     def build(self):
-        base_model = EfficientNetB0(input_tensor=Input(shape=(360,640,3)), alpha=.75, include_top=False, weights='imagenet', pooling='avg')
+        base_model = EfficientNetB0(input_tensor=Input(shape=self.shape), include_top=False, weights='imagenet', pooling='avg')
 
         x = base_model.output
 
