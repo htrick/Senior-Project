@@ -32,13 +32,13 @@ class DataExtractor:
 
       # Download the images and their associated data
       if labelboxFile is not None:
-         self.downloadImageData(downloadType, labelboxFile, configFile, labelbox.Labelbox())
+         self.downloadImageData(downloadType, labelboxFile, configFile, labelbox.Labelbox(), args.warnings)
 
       #Loop through the JSON files given and download data
       if scaleFile is not None:
          for numScaleFiles in range(len(args.scale)):
             scaleFile = args.scale[numScaleFiles]
-            self.downloadImageData(downloadType, scaleFile, configFile, scale_ai.Scale_ai())
+            self.downloadImageData(downloadType, scaleFile, configFile, scale_ai.Scale_ai(), args.warnings)
 
       # Split images into training and validation directories,
       # Creates new random splits on every call
@@ -48,7 +48,7 @@ class DataExtractor:
 
    # Parse the command line to find what flags were given
    def argumentParse(self):
-      parser = argparse.ArgumentParser(prog = 'dataExtractor.py',usage = 'Usage: python3 dataExtractor.py [-clean] [-a] [-n] -p [0-1] -labelbox [filename.csv] -scale [filename(s).json] -c [filename]')
+      parser = argparse.ArgumentParser(prog = 'dataExtractor.py',usage = 'Usage: python3 dataExtractor.py [-clean] [-a] [-n] -p [0-1] -labelbox [filename.csv] -scale [filename(s).json] -c [filename] [-warnings]')
       
       parser.add_argument('-clean',action='store_true',help = 'Flag argument to remove all the directories and files containing image data')
       parser.add_argument('-a',action='store_true',help = 'Flag argument to re-download all of the images from the given data file that follows')
@@ -57,6 +57,7 @@ class DataExtractor:
       parser.add_argument('-c',nargs='?',type=str, const='config',help = 'Flag argument to specify the config file to use to determine the height and width of the images to save, and the number of points to extract from the image mask. Default file is "config"')
       parser.add_argument('-labelbox',type=str,help = 'The name of the data file to download and extract image and mask data from, if using a LabelBox file')
       parser.add_argument('-scale',nargs='*',type =str,help = 'The name of the data file(s) to download and extract image(s) and mask data from, if using a scale.ai file(s)')
+      parser.add_argument('-warnings', action='store_true', help='Show warnings for potential polygon errors')
 
       args = parser.parse_args()
 
@@ -137,7 +138,7 @@ class DataExtractor:
          return
 
    # Download the image and mask data from the data file.
-   def downloadImageData(self, flag, dataFile, configFile, data):
+   def downloadImageData(self, flag, dataFile, configFile, data, showWarnings):
       try:
          imageFile = open(dataFile, 'r') # Open the data file
       except:
@@ -243,10 +244,6 @@ class DataExtractor:
          # Get the polygons for the mask data
          polygons = data.getPolygons(row)
 
-         # Check if there is a polygon labeling error
-         if self.checkLabelingError(polygons, origWidth):
-            print("Potential labeling error for image: " + id)
-
          # Draw the mask and save it
          orgMask = cv2.fillPoly(orgMask, polygons, (255, 255, 255), lineType=cv2.LINE_8)
          newMask = cv2.resize(orgMask, (imgWidth, imgHeight))
@@ -262,6 +259,10 @@ class DataExtractor:
 
          # Extract the mask data
          points = self.extractMaskPoints(pixels, width, height, numOutputs)
+
+         # Check if there is a polygon labeling error
+         if showWarnings and self.checkLabelingError(points):
+            print("Potential labeling error for image: " + id)
 
          # Load the image to draw the extracted mask data on for validation
          validationMaskImage = cv2.imread(dirPath + "/Input_Images/" + imgName)
@@ -304,17 +305,13 @@ class DataExtractor:
       return
 
    # Check if the left or right edge of the polygon is slanted
-   def checkLabelingError(self, polygons, width):
-      for polygon in polygons:
-         countXLeft = 0
-         countXRight = 0
-         for point in polygon:
-            if point[0] == 0:
-               countXLeft += 1
-            elif point[0] == width - 1:
-               countXRight += 1
-         if countXLeft == 1 or countXRight == 1:
-            return True
+   def checkLabelingError(self, points):
+      # if the difference between the first and second point is twice the difference between the second and third
+      if abs(points[0] - points[1]) > 2 * max(abs(points[1] - points[2]), 0.005):
+         return True
+      # if the difference between the last and second to last point is twice the difference between the second to last and third to last
+      if abs(points[-1] - points[-2]) > 2 * max(abs(points[-2] - points[-3]), 0.005):
+         return True
       return False
 
    # Extract 128 points representing the bounds of the image mask between 0-1. Takes in the pixel array representing the mask, and the width & height of the mask
