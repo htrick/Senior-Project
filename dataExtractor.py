@@ -19,7 +19,11 @@ class DataExtractor:
    # Extract input and expected output data from the csv file
    def _main(self):
       args = self.argumentParse()
-      
+      lbImageCount = 0
+      scaleImageCount = 0
+      trainingImageCount = 0
+      validationImageCount = 0
+
       if args.clean == True:
          self.cleanData()
          return
@@ -32,18 +36,25 @@ class DataExtractor:
 
       # Download the images and their associated data
       if labelboxFile is not None:
-         self.downloadImageData(downloadType, labelboxFile, configFile, labelbox.Labelbox(), args.warnings)
+         lbImageCount += self.downloadImageData(downloadType, labelboxFile, configFile, labelbox.Labelbox(), args.warnings)
 
       #Loop through the JSON files given and download data
       if scaleFile is not None:
          for numScaleFiles in range(len(args.scale)):
             scaleFile = args.scale[numScaleFiles]
-            self.downloadImageData(downloadType, scaleFile, configFile, scale_ai.Scale_ai(), args.warnings)
+            scaleImageCount += self.downloadImageData(downloadType, scaleFile, configFile, scale_ai.Scale_ai(), args.warnings)
 
       # Split images into training and validation directories,
       # Creates new random splits on every call
       print("Splitting images into training and validation")
-      self.splitImages(validPercent)
+      (validationImageCount, trainingImageCount) = self.splitImages(validPercent)
+
+      totalImages = scaleImageCount + lbImageCount   
+      
+      print("\nTotal Images: %d" %totalImages)
+      print("Training Images: %d" %trainingImageCount)
+      print("Validation Images: %d\n" %validationImageCount)
+
       return
 
    # Parse the command line to find what flags were given
@@ -302,7 +313,7 @@ class DataExtractor:
       whiteList.close()
       blackList.close()
       '''
-      return
+      return imgNum
 
    # Check if the left or right edge of the polygon is slanted
    def checkLabelingError(self, points):
@@ -415,22 +426,24 @@ class DataExtractor:
 
       # Determine how many images to use for validation
       numValid = round(len(images) * validPercent)
-      numChosen = 0
+      validationCount = 0
+      trainingCount = 0
 
       # Save images to the validation directory randomly
-      while numChosen <= numValid-1:
+      while validationCount <= numValid-1:
          index = randint(0, len(images)-1)
          imgName = images.pop(index)
          img = Image.open(dirPath + "/Input_Images/" + imgName)
          img.save(dirPath + "/Validation_Images/" + imgName)
-         numChosen += 1
+         validationCount += 1
 
       # Save the rest of the images to the training directory
       for imgName in images:
          img = Image.open(dirPath + "/Input_Images/" + imgName)
          img.save(dirPath + "/Training_Images/" + imgName)
+         trainingCount+=1
 
-      return
+      return (validationCount,trainingCount)
 
 if __name__ == '__main__':
    d = DataExtractor()
