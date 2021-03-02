@@ -4,7 +4,8 @@ import numpy as np
 import cv2
 
 def main(imageHeight, imageWidth, numOutputs, inputPath, outputPath):
-    model = efficientnetb0_pretrained.EfficientNetB0_Pretrained(shape=(360,640,3), num_outputs=128)
+    m = efficientnetb0_pretrained.EfficientNetB0_Pretrained(shape=(360,640,3), num_outputs=128)
+    model = m.build()
 
     for file in os.listdir(inputPath):
         imagePath = os.path.join(inputPath, file)
