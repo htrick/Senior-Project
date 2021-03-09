@@ -24,7 +24,7 @@ def main(imageHeight, imageWidth, numOutputs, inputPath, outputPath):
             y = int(prediction[i] * imageHeight)
             validationMaskImage = cv2.circle(validationMaskImage, (x, y), 1, (0, 255, 0), -1)
             x += imageWidth // numOutputs
-        cv2.imwrite('{}/{}_inference.jpg'.format(outputPath, file), validationMaskImage)
+        cv2.imwrite('{}/{}_inference.jpg'.format(outputPath, file.split('.')[0]), validationMaskImage)
 
 if __name__ == '__main__':
     main(360, 640, 128, '../Input_Images', 'Inference_Images')
