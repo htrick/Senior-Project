@@ -14,7 +14,7 @@ def main(imageHeight, imageWidth, numOutputs, inputPath, outputPath):
         imagePath = os.path.join(inputPath, file)
 
         X = np.empty((1, imageHeight, imageWidth, 3), dtype='float32')
-        X[0, :, :, :] = cv2.imread(imagePath).copy()[:, :, ::-1] / 255.0
+        X[0, :, :, :] = cv2.imread(imagePath).copy()[:, :, ::-1]
 
         prediction = model.predict(X)[0]
 
