@@ -15,7 +15,7 @@ source pt-env/bin/activate
 Then, install the necessary packages:
 
 ```
-pip3 install torch torchsummary torchvision albumentations
+pip3 install torch torchsummary torchvision albumentations timm
 ```
 
 ## Working with the training/testing scripts
