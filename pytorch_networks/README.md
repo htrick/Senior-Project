@@ -29,7 +29,7 @@ python3 train.py
 To run the inference script (which will create new images in the ``Inference_Images`` directory):
 
 ```
-python3 inference model_name.pt
+python3 inference.py model_name.pt
 ```
 
 
