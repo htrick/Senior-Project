@@ -19,8 +19,8 @@ numpy >= 1.17.2
 
 ## dataExtractor.py
 
-* filename.csv: The name of the data file to download and extract image and mask data from if using a LabelBox file
-* filename.json: The name of the data file to download and extract image and mask data from if using a scale.ai file
+* -labelbox: The name of the data file to download and extract image and mask data from if using a LabelBox file
+* -scale: The name of the data file(s) to download and extract image and mask data from if using a scale.ai file
 * -clean: A flag argument to remove all the directories and files containing image data, a way to 'clean' all directory
 * -a: A flag argument to re-download all of the images from the given data file that follows
 * -n: A flag argument to skip already downloaded images and their associated data and download any new images and their associated data from the given data file that follows
