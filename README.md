@@ -31,17 +31,17 @@ numpy >= 1.17.2
 "Usage: python3 dataExtractor.py [-clean] [-a] [-n] -p [0-1] -labelbox [filename.csv] -scale [filename(s).json] -c [filename] [-warnings]"
 ``` 
 ```
-python3 dataExtractor.py -a -labelbox labelbox_small_export.csv -scale tasks.json -c config
+python3 dataExtractor.py -a -labelbox labelbox_small_export.csv -scale scaleai.json -c config
 
 python3 dataExtractor.py -a -scale labelme_hdr.json labelme_sdr.json -labelbox labelbox_small_export.csv -c config
 
-python3 dataExtractor.py -n -c -p .90 -labelbox labelbox_small_export.csv -scale tasks.json
+python3 dataExtractor.py -n -c -p .90 -labelbox labelbox_small_export.csv -scale scaleai.json
 ```
 
 Sample command to run a complete download of all images (labelme, Labelbox, and scale.ai):
 
 ```
-python3 dataExtractor.py -a -p .05 -scale labelme_hdr.json labelme_sdr.json tasks.json -labelbox labelbox_full_export.csv -c config
+python3 dataExtractor.py -a -p .05 -scale labelme_hdr.json labelme_sdr.json scaleai.json -labelbox labelbox_full_export.csv -c config
 ```
 
 
