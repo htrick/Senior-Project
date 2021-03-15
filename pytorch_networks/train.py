@@ -13,6 +13,8 @@ import torch.optim as optim
 from torch.optim import lr_scheduler
 from torch.utils.data import Dataset, DataLoader
 import torchvision.models as models
+from tqdm import tqdm
+from time import sleep
 
 cudnn.benchmark = True
 
@@ -21,7 +23,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
     since = time.time()
 
-    best_loss = 100.0
+    best_loss = 100000.0
 
     for epoch in range(num_epochs):
         print('Epoch {}/{}'.format(epoch, num_epochs - 1))
@@ -35,8 +37,10 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
                 model.eval()   # Set model to evaluate mode
 
             running_loss = 0.0
+            iterations = len(dataloaders[phase])
 
             # Iterate over data.
+            pbar = tqdm(total=iterations,desc=phase,ncols=70)
             for inputs, labels in dataloaders[phase]:
                 inputs = inputs.to(device)
                 output_tensor = labels.to(device)
@@ -60,6 +64,9 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
 
                 # statistics
                 running_loss += loss.item() * inputs.size(0)
+                pbar.update(1)
+                sleep(0.01) #delay to print stats
+            pbar.close()
 
             if phase == 'train': #adjust the learning rate if training
                 scheduler.step()

@@ -12,21 +12,26 @@ class Pretrained_Model:
         #self.m = timm.create_model('efficientnet_b0', pretrained=True)
         #self.m = timm.create_model('gernet_s', pretrained=True)
         #self.m = timm.create_model('tf_efficientnet_b0_ns', pretrained=True)
-        self.m = timm.create_model('tf_efficientnet_lite0', pretrained=True)
-        # self.m = timm.create_model('mobilenetv2_110d', pretrained=True)
+        # self.m = timm.create_model('tf_efficientnet_lite0', pretrained=True)
+        #self.m = timm.create_model('semnasnet_075', pretrained=False)
+        self.m = timm.create_model('efficientnet_lite0', pretrained=True)
 
         # remove the last layer of the pretrained model
         # 'classifier' is the name of the final layer of the model
         num_final_inputs = self.m.classifier.in_features
         self.m.classifier = torch.nn.Linear(num_final_inputs, self.num_outputs)
-        #self.m.classifier = torch.nn.Sequential(
+        '''
+        self.m.classifier = torch.nn.Sequential(
             #torch.nn.Dropout(0.1),
-            #torch.nn.Linear(1280, 350),
-            #torch.nn.ReLU(),
+            torch.nn.Linear(1280, 500),
+            torch.nn.ReLU(),
+            torch.nn.Linear(500, 500),
+            torch.nn.ReLU(),
             #torch.nn.Dropout(0.1),
             #torch.nn.Linear(num_final_inputs, self.num_outputs)
-            #torch.nn.Linear(350, self.num_outputs)
-        #)
+            torch.nn.Linear(500, self.num_outputs)
+        )
+        '''
 
         # GeNet - GPU efficient net (gernet_s)
         # num_final_inputs = self.m.head.fc.in_features
