@@ -2,9 +2,9 @@
 ***
 
 ## Description
-The purpose of this project is to develop a machine learning model that takes an image taken by a moving robot (Herbie) and highlights the path in the photo that Herbie can “walk” on. This is done by: 
-1.	Converting the image into a mask. The mask is represented by a line separating where the robot can and cannot walk. 
-2.	Generate coordinates for each mask. Each image mas has 128 (x, y) coordinates, with x being the x axis pixel (left-to-right), and y being the distance from the bottom of the image normalized between 0 and 1. 
+The purpose of this project is to develop a machine learning model that takes an image taken by a moving robot (Herbie) and highlights the path in the photo that Herbie can drive on. This is done by: 
+1.	Converting the image into a mask. The mask is represented by a line separating where the robot can and cannot drive. 
+2.	Generate coordinates for each mask. Each image has 128 (x, y) coordinates, with *x* being the column coordinate (left-to-right), and *y* being the distance from the top of the image normalized between 0 and 1 (0=top of image, 1=bottom of image). 
 3.	Overlay the mask coordinates onto the original image as green circles to visually display where the robot would be able to walk in this image. 
 4.	Using the original images as input, and the overlayed images as valid outputs, we now have a dataset to begin training the model to predict mask points for new images. 
 
@@ -37,6 +37,14 @@ python3 dataExtractor.py -a -scale labelme_hdr.json labelme_sdr.json -labelbox l
 
 python3 dataExtractor.py -n -c -p .90 -labelbox labelbox_small_export.csv -scale tasks.json
 ```
+
+Sample command to run a complete download of all images (labelme, Labelbox, and scale.ai):
+
+```
+python3 dataExtractor.py -a -p .05 -scale labelme_hdr.json labelme_sdr.json tasks.json -labelbox labelbox_full_export.csv -c config
+```
+
+
 ## Directories
 The images and their mask data gathered from the dataExtractor.py script are stored in the following directories and .txt files. All directories and files are stored relative the path where the dataExtractor.py script was called from.
 * **Input_Images**: Stores a copy of the original image to be used for input.
@@ -65,9 +73,9 @@ python3 labelme_to_scaleai.py http://users.csc.calpoly.edu/\~jseng/scale_ai_imag
 ### **model**
 Argument|Description|Type|Default
 ---|---|---|---
-input_width|Input width of MobileNet V3 model.|int|640
-input_height|Input height of MobileNet V3 model.|int|360
-num_outputs|Number of points genreated to define the boundary of free space|int|128
+input_width|Input width of model|int|640
+input_height|Input height of model|int|360
+num_outputs|Number of points generated to define the boundary of free space|int|128
 
 ### **gpu**
 Argument|Description|Type|Default
