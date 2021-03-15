@@ -26,8 +26,9 @@ numpy >= 1.17.2
 * -n: A flag argument to skip already downloaded images and their associated data and download any new images and their associated data from the given data file that follows
 * -p: An optional flag argument to use with -a or -n to specify what percentage of the downloaded images to set aside for validation, percentage is to be a float between 0-1.0. Default percentage is 0.15
 * -c: A flag argument to specify the config file to use to determine the height and width of the images to save, and the number of points to extract from the image masks
+* -warnings: Show warnings for potential polygon errors
 ```
-"Usage: python3 dataExtractor.py [-clean] [-a] [-n] -p [0-1] -labelbox [filename.csv] -scale [filename(s).json] -c [filename]"
+"Usage: python3 dataExtractor.py [-clean] [-a] [-n] -p [0-1] -labelbox [filename.csv] -scale [filename(s).json] -c [filename] [-warnings]"
 ``` 
 ```
 python3 dataExtractor.py -a -labelbox labelbox_small_export.csv -scale tasks.json -c config
