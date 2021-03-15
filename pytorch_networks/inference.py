@@ -16,7 +16,7 @@ def main(imageHeight, imageWidth, numOutputs, inputPath, outputPath):
     # 'python3 inference.py ref.pt'
     # then load the PyTorch model 'ref.pt'
     if len(sys.argv) == 2:
-        model = torch.load(sys.argv[1]) # load the trained model
+        model = torch.load(sys.argv[1],map_location=device) # load the trained model
         model.eval() #switch the model to inference mode
     else:
         m = pretrained_model.Pretrained_Model(shape=(imageHeight,imageWidth,3), num_outputs=numOutputs)
