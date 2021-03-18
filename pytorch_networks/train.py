@@ -117,7 +117,7 @@ if __name__ == '__main__':
     #configure the training
     criterion = nn.L1Loss()
     optimizer = optim.Adam(model.parameters(), lr=0.001)
-    exp_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
+    exp_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=20, gamma=0.1)
 
     #train the model
     model = train_model(model, criterion, optimizer, exp_lr_scheduler, num_epochs=50)
