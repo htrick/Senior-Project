@@ -57,4 +57,5 @@ def main(imageHeight, imageWidth, numOutputs, inputPath, outputPath):
         cv2.imwrite('{}/{}_inference.jpg'.format(outputPath, file.split('.')[0]), validationMaskImage)
 
 if __name__ == '__main__':
-    main(360, 640, 128, '../Validation_Images', 'Inference_Images')
+    #main(360, 640, 128, '../Validation_Images', 'Inference_Images')
+    main(360, 640, 80, '../Validation_Images', 'Inference_Images')

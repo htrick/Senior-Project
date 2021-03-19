@@ -24,24 +24,24 @@ class AugmentImages:
 
     def augmentation_pipeline(self, p=0.5):
         return Compose([
-            HorizontalFlip(p=0.5),
+            #HorizontalFlip(p=0.5),
             OneOf([
                 IAAAdditiveGaussianNoise(),
                 GaussNoise(),
             ], p=0.2),
             OneOf([
-                MotionBlur(p=0.2),
+                MotionBlur(p=0.1),
                 #MedianBlur(blur_limit=3, p=0.1),
                 Blur(blur_limit=3, p=0.1),
-            ], p=0.1),
-            OneOf([
-               ShiftScaleRotate(shift_limit=0.0625, scale_limit=0.2, rotate_limit=5, p=0.9),
-               IAAPerspective(scale=(.02,.05))
-            ], p=0.3)
+            ], p=0.1)
+            # OneOf([
+            #    ShiftScaleRotate(shift_limit=0.0625, scale_limit=0.2, rotate_limit=5, p=0.9),
+            #    IAAPerspective(scale=(.02,.05))
+            # ], p=0.003)
         ], p=p)
 
     '''This function takes the path to the image and the path to the image
-    maks.  It returns the augmented image/mask and the output data'''
+    mask.  It returns the augmented image/mask and the output data'''
     def augment_image(self, path, mask_path):
         img = cv2.imread(path) #read in the image
         img_mask = cv2.imread(mask_path) #read in the mask
@@ -67,19 +67,35 @@ class AugmentImages:
         width = mask.shape[1]
         #print (self.num_outputs)
 
-        for i in range(0,width,int(width/self.num_outputs)): #run through width, 0 to 639
-            found = 0
-            for row in range(height-1,-1,-1): #run from bottom (359) to top (0)
-                point = mask[row,i] #point is a 3-element list (RGB)
-                if point[0] < 128: #if the color is black, then save the point
-                    found = 1
-                    if row < (height-1):
-                        data_list.append(float(row+1) / float(height))
-                    else:
-                        data_list.append(1.0)
-                    break
-            if found == 0:
-                data_list.append(float(0.0))
+        # for i in range(0,width,int(width/self.num_outputs)): #run through width, 0 to 639
+        #     found = 0
+        #     for row in range(height-1,-1,-1): #run from bottom (359) to top (0)
+        #         point = mask[row,i] #point is a 3-element list (RGB)
+        #         if point[0] < 128: #if the color is black, then save the point
+        #             found = 1
+        #             if row < (height-1):
+        #                 data_list.append(float(row+1) / float(height))
+        #             else:
+        #                 data_list.append(1.0)
+        #             break
+        #     if found == 0:
+        #         data_list.append(float(0.0))
+
+        #read in mask data
+        #print (mask_path)
+        mask = mask_path.split('/')
+        prefix = mask[2].split('.')
+        new_name = '../Mask_Data/' + prefix[0] + '_data.txt'
+        #print (new_name)
+
+        # read in mask data
+        file1 = open(new_name, 'r')
+        lines = file1.readlines()
+        file1.close()
+
+        for l in lines:
+            d = l.split(',')
+            data_list.append(float(d[1]))
 
         #print (data_list)
         try:
@@ -112,7 +128,8 @@ class AugmentImages:
         #normalize the image data
         i = augmented["image"]
         #augmented["image"] = preprocess_input(i.astype(float))
-        augmented["image"] = i / 255.0
+        augmented["image"] = i / 127.5
+        augmented["image"] = augmented["image"] - 1.
 
         return augmented, data_list
 

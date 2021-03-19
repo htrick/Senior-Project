@@ -1,5 +1,6 @@
 import timm
 import torch
+from torchvision import models
 from torchsummary import summary
 
 class Pretrained_Model:
@@ -9,36 +10,33 @@ class Pretrained_Model:
 
     def build(self):
         # instantiate pre-trained model
-        #self.m = timm.create_model('efficientnet_b0', pretrained=True)
-        #self.m = timm.create_model('gernet_s', pretrained=True)
-        #self.m = timm.create_model('tf_efficientnet_b0_ns', pretrained=True)
-        # self.m = timm.create_model('tf_efficientnet_lite0', pretrained=True)
-        #self.m = timm.create_model('semnasnet_075', pretrained=False)
-        self.m = timm.create_model('efficientnet_lite0', pretrained=True)
+        self.m = timm.create_model('mobilenetv2_100', pretrained=True)
+        #self.m = timm.create_model('tf_mixnet_s', pretrained=True)
+        #self.m = timm.create_model('semnasnet_075', pretrained=True)
+        #self.m = models.mnasnet0_5(pretrained=True)
 
         # remove the last layer of the pretrained model
         # 'classifier' is the name of the final layer of the model
         num_final_inputs = self.m.classifier.in_features
         self.m.classifier = torch.nn.Linear(num_final_inputs, self.num_outputs)
+        #self.m.classifier[3] = torch.nn.Linear(1280,80)
+
         '''
         self.m.classifier = torch.nn.Sequential(
             #torch.nn.Dropout(0.1),
-            torch.nn.Linear(1280, 500),
-            torch.nn.ReLU(),
-            torch.nn.Linear(500, 500),
-            torch.nn.ReLU(),
+            #torch.nn.Linear(576, 1024),
+            #torch.nn.Hardswish(),
+            #torch.nn.ReLU(),
+            # torch.nn.Linear(256, 256),
+            # torch.nn.ReLU(),
             #torch.nn.Dropout(0.1),
             #torch.nn.Linear(num_final_inputs, self.num_outputs)
-            torch.nn.Linear(500, self.num_outputs)
+            torch.nn.Linear(1280, self.num_outputs)
         )
         '''
 
-        # GeNet - GPU efficient net (gernet_s)
-        # num_final_inputs = self.m.head.fc.in_features
-        # self.m.head.fc = torch.nn.Linear(num_final_inputs, self.num_outputs)
-
         print(self.m)
-        summary(self.m.cuda(), (3, 224, 224))
+        self.print_summary()
 
         # return model
         return self.m
@@ -50,7 +48,7 @@ class Pretrained_Model:
             summary(self.m, (3, 224, 224))
 
 if __name__ == '__main__':
-    m = Pretrained_Model(shape=(360,640,3), num_outputs=128)
+    m = Pretrained_Model(shape=(360,640,3), num_outputs=80)
     model = m.build()
     print (model)
 

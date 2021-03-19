@@ -30,20 +30,27 @@ class MobileNetV2_Pretrained:
         base_model = MobileNetV2(input_tensor=Input(shape=(360,640,3)), \
          alpha=.75, include_top=False, weights='imagenet', pooling='avg')
         #freeze_weights(base_model)
-        #for layer in base_model.layers[:154]:
-        #    layer.trainable=False
+        # base_model.trainable = False
+        # for layer in base_model.layers[:-35]:
+        #    layer.trainable=True
 
-        #for i,layer in enumerate(base_model.layers):
-        #    print(i,layer.name)
+        # Freeze all the layers
+        # for layer in base_model.layers[:]:
+        #    layer.trainable = True
+        # for layer in base_model.layers[:-7]:
+        #    layer.trainable = False
+        # for layer in base_model.layers:
+        #    print(layer, layer.trainable)
 
         x = base_model.output
 
         #testing
-        x = Dense(200, activation='relu')(x)
+        x = Dropout(0.2, name='Dropout1')(x)
+        x = Dense(400, activation='relu')(x)
         #x = Conv2D(8, (1, 1), padding='same')(x)
         #x = Flatten()(x)
 
-        #x = Dropout(0.2, name='Dropout1')(x)
+        x = Dropout(0.2, name='Dropout2')(x)
         x = Dense(self.num_outputs, activation='linear')(x)
         x = Reshape((self.num_outputs,))(x)
 
