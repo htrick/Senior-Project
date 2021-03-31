@@ -5,6 +5,7 @@ import cv2
 import torch
 from torchvision import transforms
 from PIL import Image
+import statistics
 
 def main(imageHeight, imageWidth, numOutputs, inputPath, outputPath):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -56,6 +57,50 @@ def main(imageHeight, imageWidth, numOutputs, inputPath, outputPath):
             x += imageWidth // numOutputs
         cv2.imwrite('{}/{}_inference.jpg'.format(outputPath, file.split('.')[0]), validationMaskImage)
 
+def compute_variance(imageHeight, imageWidth, numOutputs, inputPath):
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+    # Load each model in the 'models' directory
+    models = []
+    for model_file in os.listdir('models'):
+        model = torch.load(os.path.join('models', model_file),map_location=device)
+        model.eval()
+        model.to(device)
+        models.append(model)
+    
+    preprocess = transforms.Compose([
+       transforms.ToTensor(),
+       transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+       ])
+    
+    variance_file = open('variance.csv', 'w')
+
+    # For each input file
+    for file in os.listdir(inputPath):
+        imagePath = os.path.join(inputPath, file)
+        input_tensor = preprocess(Image.open(imagePath)).unsqueeze(0).to(device)
+
+        image_variance = 0
+        points = [[]] * numOutputs
+
+        # For each model, add the output to the points list
+        for model in models:
+            with torch.no_grad():
+                p_list = model(input_tensor).tolist()[0]
+            for i in range(len(p_list)):
+                points[i].append(p_list[i])
+        
+        # Compute the variance at each output point and sum them together
+        for output in points:
+            image_variance += statistics.variance(output)
+        
+        variance_file.write('{},{}\n'.format(file, str(image_variance)))
+    
+    variance_file.close()
+
 if __name__ == '__main__':
-    #main(360, 640, 128, '../Validation_Images', 'Inference_Images')
-    main(360, 640, 80, '../Validation_Images', 'Inference_Images')
+    if len(sys.argv) == 2 and sys.argv[1] == '-variance':
+        compute_variance(360, 640, 80, '../Unlabeled')
+    else:
+        #main(360, 640, 128, '../Validation_Images', 'Inference_Images')
+        main(360, 640, 80, '../Validation_Images', 'Inference_Images')
