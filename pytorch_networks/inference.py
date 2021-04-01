@@ -36,7 +36,7 @@ def main(imageHeight, imageWidth, numOutputs, inputPath, outputPath):
     for file in os.listdir(inputPath):
         imagePath = os.path.join(inputPath, file)
 
-        input_image = Image.open(imagePath) #use PIL, so it is RGB format
+        input_image = cv2.imread(imagePath) #use cv2, so it is BGR format
         input_tensor = preprocess(input_image)
         input_tensor = input_tensor.unsqueeze(0) #add 0th dimension
 
@@ -67,18 +67,18 @@ def compute_variance(imageHeight, imageWidth, numOutputs, inputPath):
         model.eval()
         model.to(device)
         models.append(model)
-    
+
     preprocess = transforms.Compose([
        transforms.ToTensor(),
        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
        ])
-    
+
     variance_file = open('variance.csv', 'w')
 
     # For each input file
     for file in os.listdir(inputPath):
         imagePath = os.path.join(inputPath, file)
-        input_tensor = preprocess(Image.open(imagePath)).unsqueeze(0).to(device)
+        input_tensor = preprocess(cv2.imread(imagePath)).unsqueeze(0).to(device)
 
         image_variance = 0
         points = [[]] * numOutputs
@@ -89,13 +89,13 @@ def compute_variance(imageHeight, imageWidth, numOutputs, inputPath):
                 p_list = model(input_tensor).tolist()[0]
             for i in range(len(p_list)):
                 points[i].append(p_list[i])
-        
+
         # Compute the variance at each output point and sum them together
         for output in points:
             image_variance += statistics.variance(output)
-        
+
         variance_file.write('{},{}\n'.format(file, str(image_variance)))
-    
+
     variance_file.close()
 
 if __name__ == '__main__':

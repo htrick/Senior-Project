@@ -38,7 +38,7 @@ class GroundDataset(Dataset):
 
     def __getitem__(self, idx):
         image_filepath = self.images_filepaths[idx]
-        image = cv2.imread(image_filepath)
+        image = cv2.imread(image_filepath) #read in BGR format
 
         #read in mask data
         mask_data_filename = image_filepath.split('/')[-1]
@@ -55,8 +55,6 @@ class GroundDataset(Dataset):
         for l in lines:
             d = l.split(',')
             data_list.append(float(d[1]))
-
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB) #convert to RGB
 
         # apply the augmentations to the image
         if self.transform is not None:
