@@ -57,7 +57,10 @@ def main(imageHeight, imageWidth, numOutputs, inputPath, outputPath):
             x += imageWidth // numOutputs
         cv2.imwrite('{}/{}_inference.jpg'.format(outputPath, file.split('.')[0]), validationMaskImage)
 
-def compute_variance(imageHeight, imageWidth, numOutputs, inputPath):
+def compute_variance(imageHeight, imageWidth, numOutputs, inputPath, outputPath):
+    if not os.path.isdir(outputPath):
+        os.mkdir(outputPath)
+
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
     # Load each model in the 'models' directory
@@ -82,13 +85,28 @@ def compute_variance(imageHeight, imageWidth, numOutputs, inputPath):
 
         image_variance = 0
         points = [[]] * numOutputs
+        first_model_p_list = None
 
         # For each model, add the output to the points list
         for model in models:
             with torch.no_grad():
                 p_list = model(input_tensor).tolist()[0]
+            
+            # Save the output from the first model for visualizing the prediction
+            if first_model_p_list == None:
+                first_model_p_list = p_list.copy()
+
             for i in range(len(p_list)):
                 points[i].append(p_list[i])
+
+        # Create the inference image and draw the predicted data points for the first model
+        validationMaskImage = cv2.imread(imagePath)
+        x = 0
+        for i in range(len(p_list)):
+            y = int(p_list[i] * imageHeight)
+            validationMaskImage = cv2.circle(validationMaskImage, (x, y), 1, (0, 255, 0), -1)
+            x += imageWidth // numOutputs
+        cv2.imwrite('{}/{}_inference.jpg'.format(outputPath, file.split('.')[0]), validationMaskImage)
 
         # Compute the variance at each output point and sum them together
         for output in points:
@@ -100,7 +118,7 @@ def compute_variance(imageHeight, imageWidth, numOutputs, inputPath):
 
 if __name__ == '__main__':
     if len(sys.argv) == 2 and sys.argv[1] == '-variance':
-        compute_variance(360, 640, 80, '../Unlabeled')
+        compute_variance(360, 640, 80, '../Unlabeled', 'Inference_Images')
     else:
         #main(360, 640, 128, '../Validation_Images', 'Inference_Images')
         main(360, 640, 80, '../Validation_Images', 'Inference_Images')
