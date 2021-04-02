@@ -76,7 +76,7 @@ def compute_variance(imageHeight, imageWidth, numOutputs, inputPath, outputPath)
        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
        ])
 
-    variance_file = open('variance.csv', 'w')
+    image_variances = []
 
     # For each input file
     for file in os.listdir(inputPath):
@@ -111,9 +111,14 @@ def compute_variance(imageHeight, imageWidth, numOutputs, inputPath, outputPath)
         # Compute the variance at each output point and sum them together
         for output in points:
             image_variance += statistics.variance(output)
+        image_variances.append((file, image_variance))
 
-        variance_file.write('{},{}\n'.format(file, str(image_variance)))
+    # Sort the variances in ascending order
+    image_variances.sort(key = lambda x: x[1])
 
+    variance_file = open('variance.csv', 'w')
+    for line in image_variances:
+        variance_file.write('{},{}\n'.format(line[0], str(line[1])))
     variance_file.close()
 
 if __name__ == '__main__':
