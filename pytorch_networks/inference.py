@@ -84,7 +84,9 @@ def compute_variance(imageHeight, imageWidth, numOutputs, inputPath, outputPath)
         input_tensor = preprocess(cv2.imread(imagePath)).unsqueeze(0).to(device)
 
         image_variance = 0
-        points = [[]] * numOutputs
+        points = []
+        for i in range(numOutputs):
+            points.append([])
         first_model_p_list = None
 
         # For each model, add the output to the points list
