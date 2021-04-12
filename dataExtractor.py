@@ -273,7 +273,10 @@ class DataExtractor:
 
          # Check if there is a polygon labeling error
          if showWarnings and self.checkLabelingError(points):
-            print("Potential labeling error for image: " + id)
+            with open("Approved_Images") as approved:
+               if imgName not in approved.read(): 
+                  print("Potential labeling error for image: " + id)
+            
 
          # Load the image to draw the extracted mask data on for validation
          validationMaskImage = cv2.imread(dirPath + "/Input_Images/" + imgName)
