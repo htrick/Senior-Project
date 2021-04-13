@@ -37,6 +37,7 @@ def main(imageHeight, imageWidth, numOutputs, inputPath, outputPath):
         imagePath = os.path.join(inputPath, file)
 
         input_image = cv2.imread(imagePath) #use cv2, so it is BGR format
+        input_image = cv2.resize(input_image, (640, 360))  #resize
         input_tensor = preprocess(input_image)
         input_tensor = input_tensor.unsqueeze(0) #add 0th dimension
 
@@ -50,6 +51,7 @@ def main(imageHeight, imageWidth, numOutputs, inputPath, outputPath):
 
         # create the inference image and draw the predicted data points
         validationMaskImage = cv2.imread(imagePath)
+        validationMaskImage = cv2.resize(validationMaskImage, (640, 360))  #resize
         x = 0
         for i in range(len(p_list)):
             y = int(p_list[i] * imageHeight)
@@ -81,7 +83,9 @@ def compute_variance(imageHeight, imageWidth, numOutputs, inputPath, outputPath)
     # For each input file
     for file in os.listdir(inputPath):
         imagePath = os.path.join(inputPath, file)
-        input_tensor = preprocess(cv2.imread(imagePath)).unsqueeze(0).to(device)
+        img = cv2.imread(imagePath)
+        img = cv2.resize(img, (640, 360))  #resize
+        input_tensor = preprocess(img).unsqueeze(0).to(device)
 
         image_variance = 0
         points = []
@@ -93,7 +97,7 @@ def compute_variance(imageHeight, imageWidth, numOutputs, inputPath, outputPath)
         for model in models:
             with torch.no_grad():
                 p_list = model(input_tensor).tolist()[0]
-            
+
             # Save the output from the first model for visualizing the prediction
             if first_model_p_list == None:
                 first_model_p_list = p_list.copy()
@@ -103,6 +107,7 @@ def compute_variance(imageHeight, imageWidth, numOutputs, inputPath, outputPath)
 
         # Create the inference image and draw the predicted data points for the first model
         validationMaskImage = cv2.imread(imagePath)
+        validationMaskImage = cv2.resize(validationMaskImage, (640, 360))  #resize
         x = 0
         for i in range(len(p_list)):
             y = int(p_list[i] * imageHeight)
