@@ -10,16 +10,13 @@ class Pretrained_Model:
 
     def build(self):
         # instantiate pre-trained model
-        self.m = timm.create_model('mobilenetv2_100', pretrained=True)
-        #self.m = timm.create_model('tf_mixnet_s', pretrained=True)
-        #self.m = timm.create_model('semnasnet_075', pretrained=True)
-        #self.m = models.mnasnet0_5(pretrained=True)
+        self.m = timm.create_model('efficientnet_lite0', pretrained=True)
+        #self.m = timm.create_model('semnasnet_100', pretrained=True)
 
         # remove the last layer of the pretrained model
         # 'classifier' is the name of the final layer of the model
         num_final_inputs = self.m.classifier.in_features
         self.m.classifier = torch.nn.Linear(num_final_inputs, self.num_outputs)
-        #self.m.classifier[3] = torch.nn.Linear(1280,80)
 
         '''
         self.m.classifier = torch.nn.Sequential(

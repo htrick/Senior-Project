@@ -127,5 +127,6 @@ if __name__ == '__main__':
     exp_lr_scheduler = lr_scheduler.CosineAnnealingLR(optimizer, T_max=10, verbose=True)
 
     #train the model
-    model = train_model(model, criterion, optimizer, exp_lr_scheduler, num_epochs=480)
+    #model = train_model(model, criterion, optimizer, exp_lr_scheduler, num_epochs=480)
+    model = train_model(model, criterion, optimizer, exp_lr_scheduler, num_epochs=203)
 

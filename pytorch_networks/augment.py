@@ -67,9 +67,9 @@ def create_datasets(train_file_list,val_file_list):
    train_transform = A.Compose(
       [
          A.RandomBrightnessContrast(p=0.5),
-         A.GaussNoise(p=.2),
+         A.GaussNoise(p=.25),
          A.ISONoise(p=.15),
-         A.RandomShadow(p=.1),
+         A.RandomShadow(p=.2),
          A.MotionBlur(p=.1),
          A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
          ToTensorV2(),
