@@ -59,6 +59,7 @@ class GroundDataset(Dataset):
         # apply the augmentations to the image
         if self.transform is not None:
             image = self.transform(image=image)["image"]
+            image = image / 255.0
 
         d = torch.Tensor(data_list) # convert the list of data points to a tensor
         return image, d #return the image and the list of datapoints
@@ -71,7 +72,7 @@ def create_datasets(train_file_list,val_file_list):
          A.ISONoise(p=.15),
          A.RandomShadow(p=.2),
          A.MotionBlur(p=.1),
-         A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
+         #A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
          ToTensorV2(),
       ]
    )
@@ -79,7 +80,7 @@ def create_datasets(train_file_list,val_file_list):
 
    val_transform = A.Compose(
       [
-         A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
+         #A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
          ToTensorV2(),
       ]
    )
