@@ -16,7 +16,7 @@ def main(imageHeight, imageWidth, numOutputs, inputPath, outputPath):
     # if the model name is passed on the command line, for example:
     # 'python3 inference.py ref.pt'
     # then load the PyTorch model 'ref.pt'
-    if len(sys.argv) == 2:
+    if len(sys.argv) > 1:
         model = torch.load(sys.argv[1],map_location=device) # load the trained model
         model.eval() #switch the model to inference mode
     else:
@@ -57,7 +57,25 @@ def main(imageHeight, imageWidth, numOutputs, inputPath, outputPath):
             y = int(p_list[i] * imageHeight)
             validationMaskImage = cv2.circle(validationMaskImage, (x, y), 1, (0, 255, 0), -1)
             x += imageWidth // numOutputs
+        
+        # Draw the trajectory that the robot should take
+        if len(sys.argv) == 3 and sys.argv[2] == '-trajectory':
+            x, y = calculate_direction(p_list)
+            x = int(x * imageWidth / numOutputs)
+            y = int(y * imageHeight)
+            cv2.arrowedLine(validationMaskImage, ((imageWidth - 1) // 2, imageHeight - 1), (x, y), (255, 0, 0))
+
         cv2.imwrite('{}/{}_inference.jpg'.format(outputPath, file.split('.')[0]), validationMaskImage)
+
+# Find the highest point from the inference
+def calculate_direction(point_list):
+    highestY = 1
+    highestX = 0
+    for i in range(len(point_list)):
+        if point_list[i] < highestY:
+            highestY = point_list[i]
+            highestX = i
+    return highestX, highestY
 
 def compute_variance(imageHeight, imageWidth, numOutputs, inputPath, outputPath):
     if not os.path.isdir(outputPath):
