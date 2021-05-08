@@ -62,7 +62,14 @@ def main(imageHeight, imageWidth, numOutputs, inputPath, outputPath):
         if len(sys.argv) == 3 and sys.argv[2] == '-trajectory':
             bottomCenter = ((imageWidth - 1) // 2, imageHeight - 1)
             endPoint = calculate_direction(p_list, imageWidth, imageHeight, numOutputs, bottomCenter)
-            cv2.arrowedLine(validationMaskImage, bottomCenter, endPoint, (0, 0, 255))
+            cv2.arrowedLine(validationMaskImage, bottomCenter, endPoint, (0, 0, 255), 2)
+
+            if bottomCenter [1] - endPoint[1] == 0:
+                angle = 3.14159 * (-1 if endPoint[0] > bottomCenter[0] else 1)
+            else:
+                angle = math.atan((bottomCenter[0] - endPoint[0]) / (bottomCenter[1] - endPoint[1]))
+            angle = round(angle * 180 / 3.14159) # angle in degrees, right is negetive
+            cv2.putText(validationMaskImage, '{} degrees'.format(angle), (bottomCenter[0] + 10, bottomCenter[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 255), 2)
 
         cv2.imwrite('{}/{}_inference.jpg'.format(outputPath, file.split('.')[0]), validationMaskImage)
 
