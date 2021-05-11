@@ -6,6 +6,7 @@ import torch
 from torchvision import transforms
 from PIL import Image
 import statistics, math
+from trajectory import Trajectory
 
 def main(imageHeight, imageWidth, numOutputs, inputPath, outputPath):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -60,37 +61,14 @@ def main(imageHeight, imageWidth, numOutputs, inputPath, outputPath):
         
         # Draw the trajectory that the robot should take
         if len(sys.argv) == 3 and sys.argv[2] == '-trajectory':
+            t = Trajectory(p_list, imageWidth, imageHeight)
             bottomCenter = ((imageWidth - 1) // 2, imageHeight - 1)
-            endPoint = calculate_direction(p_list, imageWidth, imageHeight, numOutputs, bottomCenter)
+            endPoint = t.get_target_point()
             cv2.arrowedLine(validationMaskImage, bottomCenter, endPoint, (0, 0, 255), 2)
-
-            if bottomCenter [1] - endPoint[1] == 0:
-                angle = 3.14159 * (-1 if endPoint[0] > bottomCenter[0] else 1)
-            else:
-                angle = math.atan((bottomCenter[0] - endPoint[0]) / (bottomCenter[1] - endPoint[1]))
-            angle = round(angle * 180 / 3.14159) # angle in degrees, right is negetive
+            angle = t.get_angle()
             cv2.putText(validationMaskImage, '{} degrees'.format(angle), (bottomCenter[0] + 10, bottomCenter[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 255), 2)
 
         cv2.imwrite('{}/{}_inference.jpg'.format(outputPath, file.split('.')[0]), validationMaskImage)
-
-# Find the furthest point from the bottom center
-def calculate_direction(point_list, width, height, numOutputs, bottomCenter):
-    highest_value = min(point_list)
-    if highest_value < 0.5: # if the highest point is in the upper half of the image
-        x = int(point_list.index(highest_value) * width / numOutputs)
-        y = int(highest_value * height)
-        return (x, y)
-
-    furthestPoint = (0, 0) # otherwise, find the furthest point to the right or left
-    furthestDistance = 0
-    for i in range(len(point_list)):
-        x = int(i * width / numOutputs)
-        y = int(point_list[i] * height)
-        distance = math.sqrt(((bottomCenter[0] - x) ** 2) + ((bottomCenter[1] - y) ** 2))
-        if distance > furthestDistance:
-            furthestDistance = distance
-            furthestPoint = (x, y)
-    return furthestPoint
 
 def compute_variance(imageHeight, imageWidth, numOutputs, inputPath, outputPath):
     if not os.path.isdir(outputPath):
