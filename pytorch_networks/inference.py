@@ -67,6 +67,10 @@ def main(imageHeight, imageWidth, numOutputs, inputPath, outputPath):
             cv2.arrowedLine(validationMaskImage, bottomCenter, endPoint, (0, 0, 255), 2)
             angle = t.get_angle()
             cv2.putText(validationMaskImage, '{} degrees'.format(angle), (bottomCenter[0] + 10, bottomCenter[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 255), 2)
+            outline = t.get_outline()
+            cv2.line(validationMaskImage, outline[0], outline[1], (255, 0, 0), 1)
+            cv2.line(validationMaskImage, outline[1], outline[3], (255, 0, 0), 1)
+            cv2.line(validationMaskImage, outline[2], outline[0], (255, 0, 0), 1)
 
         cv2.imwrite('{}/{}_inference.jpg'.format(outputPath, file.split('.')[0]), validationMaskImage)
 
