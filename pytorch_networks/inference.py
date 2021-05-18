@@ -9,6 +9,8 @@ import statistics, math
 from trajectory import Trajectory
 
 def main(imageHeight, imageWidth, numOutputs, inputPath, outputPath):
+    trajectory = Trajectory(numOutputs, imageWidth, imageHeight)
+
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
     if not os.path.isdir(outputPath): # make the output inference image directory
@@ -61,13 +63,12 @@ def main(imageHeight, imageWidth, numOutputs, inputPath, outputPath):
         
         # Draw the trajectory that the robot should take
         if len(sys.argv) == 3 and sys.argv[2] == '-trajectory':
-            t = Trajectory(p_list, imageWidth, imageHeight)
             bottomCenter = ((imageWidth - 1) // 2, imageHeight - 1)
-            endPoint = t.get_target_point()
+            endPoint = trajectory.get_target_point(p_list)
             cv2.arrowedLine(validationMaskImage, bottomCenter, endPoint, (0, 0, 255), 2)
-            angle = t.get_angle()
+            angle = trajectory.get_angle(endPoint)
             cv2.putText(validationMaskImage, '{} degrees'.format(angle), (bottomCenter[0] + 10, bottomCenter[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 255), 2)
-            outline = t.get_outline()
+            outline = trajectory.get_outline()
             cv2.line(validationMaskImage, outline[0], outline[1], (255, 0, 0), 1)
             cv2.line(validationMaskImage, outline[1], outline[3], (255, 0, 0), 1)
             cv2.line(validationMaskImage, outline[2], outline[0], (255, 0, 0), 1)
