@@ -32,4 +32,8 @@ To run the inference script (which will create new images in the ``Inference_Ima
 python3 inference.py model_name.pt
 ```
 
+To overlay the trajectory information on the inference images, use the ``-trajectory`` flag:
 
+```
+python3 inference.py model_name.pt -trajectory
+```

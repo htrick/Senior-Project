@@ -1,6 +1,7 @@
 import math
 
 class Trajectory:
+    # Create a new Trajectory object once, with the number of output points, the width, and the height
     def __init__(self, numberOfOutputs, imageWidth, imageHeight):
         self.width = imageWidth
         self.height = imageHeight
@@ -12,22 +13,29 @@ class Trajectory:
         bottom_right = (int(0.63 * self.width), int(self.height - 1))
         self.outline = (top_left, top_right, bottom_left, bottom_right)
 
+    # Get the angle of the trajectory in degress (right is negative)
     def get_angle(self, end_point):
         return self.__calculate_angle(end_point)
 
+    # Get the coordinates of the trajectory point in (x, y) format
     def get_target_point(self, points_list):
         return self.__calculate_direction(points_list)
     
-    # 4 points for the outline of the width of the robot for 3 feet in front of the camera
+    # Get the 4 points for the outline of the width of the robot for 3 feet in front
+    # Format: (top_left, top_right, bottom_left, bottom_right)
     def get_outline(self):
         return self.outline
     
+
+
+    # The functions below should not be called from outside of this class
+
     def __calculate_angle(self, endPoint):
         if self.bottomCenter [1] - endPoint[1] == 0:
             angle = math.pi * (-1 if endPoint[0] > self.bottomCenter[0] else 1)
         else:
             angle = math.atan((self.bottomCenter[0] - endPoint[0]) / (self.bottomCenter[1] - endPoint[1]))
-        return round(angle * 180 / math.pi) # angle in degrees, right is negetive
+        return round(angle * 180 / math.pi) # angle in degrees, right is negative
 
     # Find the furthest point from the bottom center
     def __calculate_direction(self, points_list):
@@ -57,7 +65,6 @@ class Trajectory:
     
     # Check if any points are in the area of the outline polygon
     def __is_blocked(self, points_list):
-        outline = self.get_outline()
         for i in range(len(points_list)):
             x_percent = i / self.numOutputs
             y_percent = points_list[i]
