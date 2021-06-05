@@ -1,4 +1,9 @@
-# Senior-Project
+# Senior Project
+Winter/Spring 2021
+
+Dr. John Seng
+
+Hunter Trick, Saehej Kang, Christian Aboud
 ***
 
 ## Description
@@ -76,31 +81,3 @@ Argument|Description|Type|Default
 input_width|Input width of model|int|640
 input_height|Input height of model|int|360
 num_outputs|Number of points generated to define the boundary of free space|int|128
-
-### **gpu**
-Argument|Description|Type|Default
----|---|---|---
-gpu|Specify a GPU.|str|0
-
-### **inference**
-Argument|Description|Type|Default
----|---|---|---
-weight_path|Saved weights of MobileNet V3 model.|str|weights/2_5_ep200-loss0.014_1.h5
-image_path|Path to the images to make predictions for with the MobileNet V3 model.|str|../Input_Images
-inference_dir|Path to save the model predictions|str|Model_Predictions
-
-### **video_inference**
-Argument|Description|Type|Default
----|---|---|---
-weight_path|Saved weights of MobileNet V3 model.|str|weights/2_5_ep200-loss0.014_1.h5
-bag_file_path|Bag file to read from.|str|None
-bag_file_topics|Topics of tha bag file.|str|None
-
-
-### **rank**
-Argument|Description|Type|Default
----|---|---|---
-image_path|Path to the images to rank.|str|../Input_Images
-weight_path_prefix|Prefix of the paths to the weight files to use. Weight Files are expected to end in _h1-4.|str|None
-rank_percent|The percentage of the worst ranking images to save|float|0.2
-
