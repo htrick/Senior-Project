@@ -1,10 +1,14 @@
-# Senior Project
+# **Senior Project**
 Winter/Spring 2021
 
 Dr. John Seng
 
 Hunter Trick, Saehej Kang, Christian Aboud
 ***
+
+
+
+# Data Collection
 
 ## Description
 The purpose of this project is to develop a machine learning model that takes an image taken by a moving robot (Herbie) and highlights the path in the photo that Herbie can drive on. This is done by: 
@@ -49,6 +53,31 @@ Sample command to run a complete download of all images (labelme, Labelbox, and 
 python3 dataExtractor.py -a -p .05 -scale labelme_hdr.json labelme_sdr.json scaleai.json -labelbox labelbox_full_export.csv -c config
 ```
 
+## labelme_to_scaleai.py
+Generates a JSON file in the format of scale.ai data based on a LabelMe dataset provided as a URL
+
+```
+usage: labelme_to_scaleai.py URL [destination]
+```
+
+Example:
+The following command would download all images from the URL into a single file named "labelme.json" (default destination)
+```
+python3 labelme_to_scaleai.py http://users.csc.calpoly.edu/\~jseng/scale_ai_image/labelme/dataset_hdr
+```
+
+## labelbox.py, scale_ai.py
+Two classes that provide functions used in dataExtractor.py to parse the file format for labelbox and scale.ai data
+
+## Config File
+
+### **model**
+Argument|Description|Type|Default
+---|---|---|---
+input_width|Input width of model|int|640
+input_height|Input height of model|int|360
+num_outputs|Number of points generated to define the boundary of free space|int|128
+
 
 ## Directories
 The images and their mask data gathered from the dataExtractor.py script are stored in the following directories and .txt files. All directories and files are stored relative the path where the dataExtractor.py script was called from.
@@ -60,24 +89,3 @@ The images and their mask data gathered from the dataExtractor.py script are sto
 * **Validation_Images**: Stores a copy of the original input images that are to be used for validation.
 * **Model_Prediction**: Stores a copy of the predictions made by the model for each of the images in the "image_path" directory in the config file used.
 
-## labelme_to_scaleai.py
-Generates a JSON file in the format of scale.ai data based on a LabelMe dataset provided as a URL
-
-```
-usage: labelme_to_scaleai.py URL [destination]
-```
-
-Example:
-The following command would download all images from the URL into a single file named "labelme.json"
-```
-python3 labelme_to_scaleai.py http://users.csc.calpoly.edu/\~jseng/scale_ai_image/labelme/dataset_hdr
-```
-
-## Config File
-
-### **model**
-Argument|Description|Type|Default
----|---|---|---
-input_width|Input width of model|int|640
-input_height|Input height of model|int|360
-num_outputs|Number of points generated to define the boundary of free space|int|128
