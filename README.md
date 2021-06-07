@@ -125,10 +125,13 @@ To run the inference script (which will create new images in the ``Inference_Ima
 python3 inference.py model_name.pt [-trajectory]
 ```
 
-To overlay the trajectory information on the inference images, use the optional ``-trajectory`` flag.
+To overlay the trajectory information on the inference images, use the optional ``-trajectory`` flag. This will display the width of the robot for three feet in front of the camera, as well as the direction and angle to drive. If something is immediately blocking the robot, it will turn to the left or right. Otherwise, it will drive to the furthest point away.
 
 To compute the variance of all models in the ``models`` directory using the images in the ``Unlabeled`` directory, run the inference script with the ``-variance`` flag. The output file will be named ``variance.csv``.
 
 ```
 python3 inference.py -variance
 ```
+
+Example output inference image with trajectory
+![Inference image with trajectory](README_example_image.jpg)
