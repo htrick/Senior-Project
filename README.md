@@ -121,7 +121,8 @@ To train the model run
 python3 train.py
 ```
 
-To run the inference script (which will create new images in the ``Inference_Images`` directory):
+The inference script (inference.py) takes in 5 inputs - image width, height, numOutputs (the number of dots to overlay on the image), input images directory, and output images directory. The resulting output is a new directory 'Inference_Images' containing the new images overlayed with dots indicating where obstacles are in the path. 
+To run the inference script:
 
 ```
 python3 inference.py model_name.pt [-trajectory]
