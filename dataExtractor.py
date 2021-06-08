@@ -24,10 +24,12 @@ class DataExtractor:
       trainingImageCount = 0
       validationImageCount = 0
 
+      #check to see if the -clean argument is used
       if args.clean == True:
          self.cleanData()
          return
 
+      #set the varialbles to the values from the arguments
       validPercent = args.p
       configFile = args.c
       scaleFile = args.scale
@@ -49,8 +51,10 @@ class DataExtractor:
       print("Splitting images into training and validation")
       (validationImageCount, trainingImageCount) = self.splitImages(validPercent)
 
+      #get the total amount of images
       totalImages = scaleImageCount + lbImageCount   
       
+      #print out the image information
       print("\nTotal Images: %d" %totalImages)
       print("Training Images: %d" %trainingImageCount)
       print("Validation Images: %d\n" %validationImageCount)
@@ -59,8 +63,8 @@ class DataExtractor:
 
    # Parse the command line to find what flags were given
    def argumentParse(self):
+      #parse the arguments using the argparse library
       parser = argparse.ArgumentParser(prog = 'dataExtractor.py',usage = 'Usage: python3 dataExtractor.py [-clean] [-a] [-n] -p [0-1] -labelbox [filename.csv] -scale [filename(s).json] -c [filename] [-warnings]')
-      
       parser.add_argument('-clean',action='store_true',help = 'Flag argument to remove all the directories and files containing image data')
       parser.add_argument('-a',action='store_true',help = 'Flag argument to re-download all of the images from the given data file that follows')
       parser.add_argument('-n',action='store_true',help = 'Flag argument to skip already downloaded images and their associated data and download any new images and their associated data and the given data file that follows')

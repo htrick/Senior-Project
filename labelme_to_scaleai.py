@@ -43,6 +43,7 @@ def download_data(url):
    all_xml_files = ['{}/Annotations/{}'.format(url, node.get('href')) for node in BeautifulSoup(page, 'html.parser').find_all('a') if node.get('href').endswith('xml')]
    print('Downloading data for {} images...\n'.format(len(all_xml_files)))
    count = 0
+   
    # For each xml file at <URL>/Annotations
    for xml_url in all_xml_files:
       count += 1
