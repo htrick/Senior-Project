@@ -92,6 +92,8 @@ The images and their mask data gathered from the dataExtractor.py script are sto
 
 # PyTorch Network
 
+## Description
+Pytorch is the neural network implementation we used to train a model that marks the driveable regions in an image. The regions are indicated by dots overlayed on the image itself; from there, we can calculate the direction and turn angle the robot should take in its current state. 
 ## Setup
 It is best to first setup a Python virtual environment before running PyTorch.  A virtual environment will download all the Python packages into a local environment directory and prevent those packages from affecting your local Python installation.  Use the following command to setup your virtual environment (you will need to do this only once, and it will create the directory ``pt-env``):
 
